@@ -8,6 +8,7 @@
 backup/
 WaveplayerData/
 installer/payload/
+installer/payload-legacy/
 installer/release/
 installer/dist/
 installer/src/payload.zip

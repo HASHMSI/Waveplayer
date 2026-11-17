@@ -8,12 +8,18 @@ a live spectrum visualizer, local playlists, customizable colors, and Automix.
 [Download the latest Waveplayer update](https://github.com/HASHMSI/Waveplayer/releases/latest).
 For a new installation, use the [v1.0.1 setup](https://github.com/HASHMSI/Waveplayer/releases/download/v1.0.1/WaveplayerSetup.exe); it updates to the latest version when first opened.
 
-Installed builds quietly check the latest public GitHub Release on startup. A newer
-release needs `WaveplayerPortable.zip` from `installer/build-update.ps1` for the
-in-app updater. `WaveplayerSetup.exe` is needed only for a new installation.
-The release tag must be a higher numeric version such as `v1.0.1`. The updater
-verifies GitHub's SHA-256 asset digest before replacing the player and preserves
-local settings. A source push alone does not trigger an update.
+Installed builds quietly check the latest public GitHub Release on startup. Version
+1.0.3 is a bridge for older single-file installations: its release includes
+`WaveplayerPortable.zip`, which their existing updater understands. On the next
+launch, the 1.0.3 bridge also migrates itself to the multi-file layout from the
+same release. New setups install that layout directly from `WaveplayerFiles.zip`. The new
+updater accepts a full `WaveplayerFiles.zip` or, when the installed base version
+matches, a smaller `WaveplayerPatch.zip`. The latter contains changed files and a
+manifest listing every target file with its SHA-256. The updater verifies the
+GitHub asset digest and all staged files before replacement, keeps a rollback
+copy, and preserves settings under `%LOCALAPPDATA%`. The first move from a
+single-file installation to multi-file needs the full package. A source push
+alone does not trigger an update.
 
 [▶ Watch the introduction video](promo/Neon-Wave.mp4)
 
@@ -40,9 +46,13 @@ The script publishes the player, creates the setup payload, and publishes
 are excluded from Git. The setup project includes short audio previews under
 `installer/src/Assets`.
 
-For an update-only release, run `./installer/build-update.ps1`. It publishes the
-player and creates `installer/release/WaveplayerPortable.zip` without rebuilding
-or uploading the setup. Pass `-Dotnet` when the SDK is not on `PATH`.
+For an update-only release, run `./installer/build-update.ps1`. It creates the
+legacy bridge and the full multi-file ZIP. Pass `-BasePayload` pointing at the
+previous release's `installer/payload` snapshot to also create the small patch;
+keep that snapshot outside the generated `installer/payload` directory. Pass
+`-Dotnet` when the SDK is not on `PATH`. Publish the full ZIP and legacy bridge
+on each release while pre-1.0.3 users still need direct updates; publish the
+patch ZIP when generated. The release tag must be a higher numeric version.
 
 Waveplayer is a compact Windows music player and live chillwave visualizer. This folder contains an untouched snapshot of the previous source and the modular working copy for continued development.
 
