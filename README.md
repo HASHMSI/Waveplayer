@@ -19,7 +19,8 @@ previous name, Neon Wave.
 
 ### Features
 
-- Play music from multiple local folders and organize playlists.
+- Play music from multiple local folders; new files appear in the library while the player is open.
+- Group playlist tracks by genre or artist tags, and drag tracks into a custom order.
 - Choose between Pulse and Glide visualizers.
 - Personalize the widget colors, background, and layout.
 - Use the built-in equalizer and Classic or Adaptive Automix.

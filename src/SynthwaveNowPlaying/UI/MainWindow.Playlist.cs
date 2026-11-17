@@ -16,64 +16,63 @@ public partial class MainWindow : Window
     // Playlist metadata loads in batches so opening the panel does not block the UI.
     private void ScanMusicFolders(IReadOnlyList<string> musicFolders)
     {
-        var supported = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".mp3", ".wav", ".aiff", ".aif", ".wma", ".m4a", ".aac", ".flac" };
         try
         {
-            _loadingLibrary = true;
-            _playlistMetadataCts?.Cancel();
-            _playlistMetadataCts?.Dispose();
-            _playlistMetadataCts = null;
-            _library.Clear();
-            _trackTitleCache.Clear();
-            _trackMetadataCache.Clear();
-            _playlistSources.Clear();
-            EndSort(false);
-            _playlistRows.Clear();
-            _allPlaylistRows.Clear();
-            // A rescan must not replace the queue of a track that is already playing.
-            if (_localTrack is null || _waveOut is null) { _activeQueue = []; _activeQueueSourceId = null; }
-            var folders = musicFolders.Where(Directory.Exists)
-                .Select(Path.GetFullPath).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
-            _library.AddRange(folders.SelectMany(folder =>
-                    Directory.EnumerateFiles(folder, "*", new EnumerationOptions
-                    { RecurseSubdirectories = true, IgnoreInaccessible = true }))
-                .Where(path => supported.Contains(Path.GetExtension(path)))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(Path.GetFileName, StringComparer.CurrentCultureIgnoreCase));
-            if (_library.Count > 0)
-            {
-                // The first folder retains the identity used by earlier one-folder settings.
-                _playlistSources.Add(CreatePlaylistSource($"all:{folders[0]}", "ALL TRACKS", _library));
-            }
-            var playlistFiles = folders.SelectMany(folder =>
-                    Directory.EnumerateFiles(folder, "*", new EnumerationOptions
-                    { RecurseSubdirectories = true, IgnoreInaccessible = true }))
-                .Where(path => new[] { ".m3u", ".m3u8", ".pls" }.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase))
-                .Distinct(StringComparer.OrdinalIgnoreCase);
-            foreach (var playlistFile in playlistFiles)
-            {
-                var tracks = ReadPlaylist(playlistFile, supported).Where(File.Exists).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-                if (tracks.Count == 0) continue;
-                _playlistSources.Add(CreatePlaylistSource($"playlist:{Path.GetFullPath(playlistFile)}", Path.GetFileNameWithoutExtension(playlistFile), tracks));
-            }
-            PlaylistSourcePicker.SelectedIndex = _playlistSources.Count > 0 ? 0 : -1;
-            PlaylistSourcePicker.Visibility = _playlistSources.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
-            PlaylistSourceRow.Height = _playlistSources.Count > 1 ? new GridLength(27) : new GridLength(0);
-            PlaylistPullButton.IsEnabled = true;
-            PlaylistCount.Text = $"{_library.Count} TRACKS";
-            SourceStatus.Text = _library.Count == 0 ? "NO AUDIO FILES FOUND" : $"LIBRARY · {_library.Count}";
+            _musicRefreshVersion++;
+            _musicRefreshDelay.Stop();
+            _changedMusicFiles.Clear();
+            ApplyMusicScan(DiscoverMusicFolders(musicFolders));
+            ConfigureMusicWatchers(musicFolders);
         }
         catch (Exception ex)
         {
             SourceStatus.Text = "FOLDER SCAN FAILED";
             ToolTip = ex.Message;
         }
-        finally
+    }
+
+    private void ApplyMusicScan(LibrarySnapshot scan)
+    {
+        var selectedId = (PlaylistSourcePicker.SelectedItem as PlaylistSource)?.Id;
+        _loadingLibrary = true;
+        try
         {
-            _loadingLibrary = false;
-            if (_playlistSources.Count > 0) BuildPlaylistRows(_playlistSources[0]);
+            _playlistMetadataCts?.Cancel();
+            _playlistMetadataCts?.Dispose();
+            _playlistMetadataCts = null;
+            EndSort(false);
+            _library.Clear();
+            _library.AddRange(scan.Tracks);
+            var currentFiles = scan.Tracks.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (var file in _trackMetadataCache.Keys.Where(file => !currentFiles.Contains(file)).ToArray()) _trackMetadataCache.Remove(file);
+            foreach (var file in _trackTitleCache.Keys.Where(file => !currentFiles.Contains(file)).ToArray()) _trackTitleCache.Remove(file);
+            _playlistSources.Clear();
+            _playlistRows.Clear();
+            _allPlaylistRows.Clear();
+            if (scan.Folders.Length > 0)
+                _playlistSources.Add(CreatePlaylistSource($"all:{scan.Folders[0]}", "ALL TRACKS", _library));
+            foreach (var playlist in scan.Playlists)
+                _playlistSources.Add(CreatePlaylistSource($"playlist:{playlist.Path}", Path.GetFileNameWithoutExtension(playlist.Path), playlist.Tracks));
+            var selected = _playlistSources.FirstOrDefault(source => source.Id.Equals(selectedId, StringComparison.OrdinalIgnoreCase))
+                ?? _playlistSources.FirstOrDefault();
+            PlaylistSourcePicker.SelectedItem = selected;
+            PlaylistSourcePicker.Visibility = _playlistSources.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
+            PlaylistSourceRow.Height = _playlistSources.Count > 1 ? new GridLength(27) : new GridLength(0);
+            PlaylistPullButton.IsEnabled = true;
+            if (_localTrack is null || _waveOut is null) { _activeQueue = []; _activeQueueSourceId = null; }
+            else if (_activeQueueSourceId is not null)
+            {
+                var queueSource = _playlistSources.FirstOrDefault(source => source.Id.Equals(_activeQueueSourceId, StringComparison.OrdinalIgnoreCase));
+                if (queueSource is not null) _activeQueue = queueSource.Files.ToList();
+            }
+            if (_localTrack is null || _waveOut is null)
+                SourceStatus.Text = _library.Count == 0 ? "NO AUDIO FILES FOUND" : $"LIBRARY · {_library.Count}";
+            PlaylistGenreSortButton.Tag = null;
+            PlaylistArtistSortButton.Tag = null;
+            if (selected is not null) BuildPlaylistRows(selected);
             else PlaylistCount.Text = "0 TRACKS";
         }
+        finally { _loadingLibrary = false; }
     }
 
     private PlaylistSource CreatePlaylistSource(string id, string label, IEnumerable<string> files)
@@ -93,6 +92,18 @@ public partial class MainWindow : Window
     {
         if (_loadingLibrary) return;
         if (PlaylistSourcePicker.SelectedItem is PlaylistSource source) BuildPlaylistRows(source);
+    }
+
+    private void PlaylistArtwork_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (sender is FrameworkElement artwork && e.NewSize.Width > 0 && e.NewSize.Height > 0)
+            artwork.Clip = new RectangleGeometry(new Rect(e.NewSize), 5, 5);
+    }
+
+    private void PlaylistPanel_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (sender is FrameworkElement panel && e.NewSize.Width > 0 && e.NewSize.Height > 0)
+            panel.Clip = new RectangleGeometry(new Rect(e.NewSize), 15, 15);
     }
 
     private void BuildPlaylistRows(PlaylistSource source)
@@ -195,6 +206,8 @@ public partial class MainWindow : Window
 
     private void SavePlaylistEdits(PlaylistSource source)
     {
+        PlaylistGenreSortButton.Tag = null;
+        PlaylistArtistSortButton.Tag = null;
         GetPlaylistEdits(source.Id).Order = source.Files.ToList();
         if (string.Equals(_activeQueueSourceId, source.Id, StringComparison.OrdinalIgnoreCase))
         {
