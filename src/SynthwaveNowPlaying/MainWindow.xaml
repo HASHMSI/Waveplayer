@@ -307,18 +307,16 @@
                         </Grid><local:AlbumVolumeOverlay x:Name="AlbumVolume" IsHitTestVisible="False"/></Grid>
                     </Border>
                     <Grid Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Margin="6,0,0,0">
-                        <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="31"/></Grid.RowDefinitions>
+                        <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="36"/></Grid.RowDefinitions>
                         <Border x:Name="SpectrumFrame" Grid.Row="0" CornerRadius="4" Background="#42100D25" BorderBrush="{DynamicResource AlbumSecondaryBrush}" BorderThickness="1" Padding="3,2">
                             <Grid x:Name="SpectrumLayers"><local:SpectrumView x:Name="Spectrum"/></Grid>
                         </Border>
                         <Grid Grid.Row="1" Margin="2,2,0,0">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                            <StackPanel x:Name="TrackInfoBlock" VerticalAlignment="Center">
+                            <StackPanel x:Name="TrackInfoBlock" VerticalAlignment="Center" Margin="0,0,8,0" ClipToBounds="True">
                                 <TextBlock x:Name="TrackTitle" Text="Waiting for a track" Foreground="{StaticResource Ink}" FontSize="11" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
-                                <DockPanel Margin="0,1,0,0">
-                                    <TextBlock x:Name="TrackKey" DockPanel.Dock="Right" Margin="6,0,0,0" Foreground="{DynamicResource AlbumSecondaryBrush}" FontSize="6.5" VerticalAlignment="Center"/>
-                                    <TextBlock x:Name="ArtistName" Text="Choose a track from your playlist" Foreground="{DynamicResource AlbumPrimaryBrush}" FontSize="7" TextTrimming="CharacterEllipsis"/>
-                                </DockPanel>
+                                <TextBlock x:Name="ArtistName" Margin="0,1,0,0" Text="Choose a track from your playlist" Foreground="{DynamicResource AlbumPrimaryBrush}" FontSize="7" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock x:Name="TrackKey" Margin="0,1,0,0" Foreground="{DynamicResource AlbumSecondaryBrush}" FontSize="6.5" TextTrimming="CharacterEllipsis"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                 <Button x:Name="PreviousControl" Style="{StaticResource TransportControlButton}" Width="27" Height="27" ToolTip="Previous track" Click="PreviousButton_Click" Margin="0,0,4,0">
