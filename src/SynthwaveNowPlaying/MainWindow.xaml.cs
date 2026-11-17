@@ -285,6 +285,7 @@ public partial class MainWindow : Window
         if (!_pinned) _dockToBottomRight = false;
         Topmost = _pinned;
         PinIcon.Opacity = _pinned ? 1 : .42;
+        PinButton.Tag = _pinned ? "Active" : null;
         PinButton.ToolTip = _pinned ? "Pinned · click to unlock movement" : "Unpinned · drag to move";
         SourceStatus.ToolTip = _pinned ? "Pinned in place" : "Window can be moved";
     }
@@ -293,6 +294,7 @@ public partial class MainWindow : Window
     {
         PlayIcon.Visibility = playing ? Visibility.Collapsed : Visibility.Visible;
         PauseIcon.Visibility = playing ? Visibility.Visible : Visibility.Collapsed;
+        PlayPauseButton.Tag = playing ? "Active" : null;
         PlayPauseButton.ToolTip = playing ? "Pause" : "Play";
     }
 
@@ -371,6 +373,7 @@ public partial class MainWindow : Window
         Spectrum.IsEditing = false;
         _archived.SetEditing(false);
         EqButton.Content = "EQ";
+        EqButton.Tag = null;
         for (var band = 0; band < Math.Min(6, _settings.Bands.Length); band++) SetSpectrumGain(band, _settings.EqualizerEnabled ? _settings.Bands[band] : 0);
         UpdateEqResetButton();
         if (_equalizer is not null) _equalizer.Enabled = _settings.EqualizerEnabled;

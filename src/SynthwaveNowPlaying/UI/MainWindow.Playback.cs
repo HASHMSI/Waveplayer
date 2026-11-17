@@ -170,7 +170,7 @@ public partial class MainWindow : Window
         }
         Spectrum.IsEditing = !Spectrum.IsEditing;
         _archived.SetEditing(Spectrum.IsEditing);
-        EqButton.Content = Spectrum.IsEditing ? "EQ ●" : "EQ";
+        EqButton.Tag = Spectrum.IsEditing ? "Active" : null;
         EqButton.ToolTip = Spectrum.IsEditing ? "Drag bands to adjust music played in this app" : "EQ for music played in this app";
         UpdateEqResetButton();
     }

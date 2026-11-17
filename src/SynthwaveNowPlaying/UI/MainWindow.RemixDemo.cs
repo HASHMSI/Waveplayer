@@ -45,12 +45,9 @@ public partial class MainWindow : Window
 
     private void UpdateRemixDemoButton()
     {
-        RemixDemoButton.Content = _settings.RemixDemoEnabled ? "REMIX ON" : "REMIX (DEMO)";
+        RemixMode.Text = _settings.RemixDemoEnabled ? "ON" : "DEMO";
         RemixDemoButton.ToolTip = $"Automix {(_settings.RemixDemoEnabled ? "on" : "off")} · {_settings.AutomixTiming} timing";
-        if (_settings.RemixDemoEnabled)
-            RemixDemoButton.Background = (Brush)FindResource("AlbumPrimaryBrush");
-        else
-            RemixDemoButton.ClearValue(System.Windows.Controls.Control.BackgroundProperty);
+        RemixDemoButton.Tag = _settings.RemixDemoEnabled ? "Active" : null;
     }
 
     // All local tracks enter the same 44.1 kHz stereo output. Resampling runs only when needed.
