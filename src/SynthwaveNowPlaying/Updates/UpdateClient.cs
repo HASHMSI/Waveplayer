@@ -73,7 +73,8 @@ internal static class UpdateClient
             if (installedExe is null || !File.Exists(installedExe)) return;
             helperDirectory = Path.Combine(Path.GetTempPath(), "WaveplayerUpdater", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(helperDirectory);
-            var helperExe = Path.Combine(helperDirectory, "WaveplayerUpdater.exe");
+            // A multi-file apphost loads Waveplayer.dll beside Waveplayer.exe.
+            var helperExe = Path.Combine(helperDirectory, "Waveplayer.exe");
             await Task.Run(() =>
             {
                 var installedManifest = UpdatePackage.ReadInstalled(installDirectory);

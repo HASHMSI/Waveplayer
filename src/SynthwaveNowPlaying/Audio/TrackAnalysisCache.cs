@@ -99,7 +99,7 @@ internal sealed class TrackAnalysisCache
             // Keep the deep profile too: its local beat phase used the verified BPM.
             if (!deepScanned && _tracks.TryGetValue(file, out var newer) && newer.DeepScanned &&
                 newer.FileLength == entry.FileLength && newer.LastWriteUtcTicks == entry.LastWriteUtcTicks)
-                entry = newer;
+                entry = newer.Profile.DurationSeconds > 0 ? newer : newer with { Profile = profile };
             _tracks[file] = entry;
             return entry;
         }
