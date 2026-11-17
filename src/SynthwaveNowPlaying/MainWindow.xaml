@@ -269,7 +269,7 @@
                     <Border x:Name="AlbumArtFrame" Grid.Row="1" Grid.Column="0" Width="78" Height="78" CornerRadius="9" BorderBrush="{DynamicResource AlbumPrimaryBrush}" BorderThickness="1.4" Background="#FF17102C" HorizontalAlignment="Left" VerticalAlignment="Center"
                             MouseLeftButtonDown="AlbumArtFrame_MouseLeftButtonDown" MouseMove="AlbumArtFrame_MouseMove"
                             MouseLeftButtonUp="AlbumArtFrame_MouseLeftButtonUp" LostMouseCapture="AlbumArtFrame_LostMouseCapture" Cursor="SizeNS">
-                        <Grid ClipToBounds="True"><Image x:Name="AlbumArtImage" Stretch="UniformToFill"/><Grid x:Name="FallbackCover">
+                        <Grid SizeChanged="AlbumArtContent_SizeChanged"><Image x:Name="AlbumArtImage" Stretch="UniformToFill"/><Grid x:Name="FallbackCover">
                             <Grid.Background><LinearGradientBrush StartPoint="0,1" EndPoint="1,0"><GradientStop Color="#FF101A52" Offset="0"/><GradientStop Color="#FF74208A" Offset="0.55"/><GradientStop Color="#FFFF4F91" Offset="1"/></LinearGradientBrush></Grid.Background>
                             <Ellipse Width="42" Height="42" Fill="#FFFFA15F" Opacity=".96" VerticalAlignment="Top" Margin="0,6,0,0"/>
                             <TextBlock Text="CHILLWAVE" Foreground="White" FontSize="7" FontWeight="Black" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,10"/>

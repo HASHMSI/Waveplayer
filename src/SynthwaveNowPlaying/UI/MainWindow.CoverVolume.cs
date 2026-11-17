@@ -1,10 +1,20 @@
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace SynthwaveNowPlaying;
 
 public partial class MainWindow : Window
 {
+    private void AlbumArtContent_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        var content = (Grid)sender;
+        double radius = Math.Max(0, AlbumArtFrame.CornerRadius.TopLeft - AlbumArtFrame.BorderThickness.Left);
+        radius = Math.Min(radius, Math.Min(e.NewSize.Width, e.NewSize.Height) / 2);
+        content.Clip = new RectangleGeometry(new Rect(e.NewSize), radius, radius);
+    }
+
     private bool _coverVolumeDragging;
     private double _lastCoverY;
     private double _coverVerticalMotion;
