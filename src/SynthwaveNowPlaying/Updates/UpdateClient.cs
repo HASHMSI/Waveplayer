@@ -76,6 +76,13 @@ internal static class UpdateClient
             var needsLayoutMigration = release is not null && release.Version == InstalledVersion &&
                 release.Files is not null && !File.Exists(Path.Combine(installDirectory, UpdatePackage.ManifestName));
             if ((!needsNewVersion && !needsLayoutMigration) || !window.IsLoaded) return;
+            // The legacy updater observes its newly started player for 1.5 s.
+            // Let that check finish before the bridge closes for layout migration.
+            if (needsLayoutMigration)
+            {
+                await Task.Delay(3000);
+                if (!window.IsLoaded || window.Dispatcher.HasShutdownStarted) return;
+            }
             var installedExe = Environment.ProcessPath;
             if (installedExe is null || !File.Exists(installedExe)) return;
             helperDirectory = Path.Combine(Path.GetTempPath(), "WaveplayerUpdater", Guid.NewGuid().ToString("N"));
