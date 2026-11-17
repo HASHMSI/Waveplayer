@@ -9,11 +9,24 @@ internal static class AdaptiveCues
         var incoming = next.IntroBeat;
         var intro = next.IntroSilence;
         var reliable = outgoing.IsReliable && incoming.IsReliable;
-        if (reliable && HasPulse(a.Outro, end - Math.Min(preferred, 3), end) &&
-            HasPulse(b.Intro, intro, intro + Math.Min(preferred, 3)))
+        // Align only equal or octave-related beat grids. Different tempos
+        // should not collapse a musical fade to the old 0.6-second minimum.
+        var equivalentIncoming = incoming.Bpm;
+        if (reliable && incoming.Bpm > outgoing.Bpm * 1.5) equivalentIncoming *= .5;
+        else if (reliable && outgoing.Bpm > incoming.Bpm * 1.5) equivalentIncoming *= 2;
+        var compatible = reliable && Math.Abs(outgoing.Bpm - equivalentIncoming) / outgoing.Bpm <= .06;
+        var outgoingPulse = HasPulse(a.Outro, end - Math.Min(preferred, 4), end);
+        var incomingPulse = HasPulse(b.Intro, intro, intro + Math.Min(preferred, 4));
+        if (!compatible && outgoingPulse && incomingPulse)
+        {
+            // Two unrelated kick patterns drift against one another. Preserve
+            // long blends for sparse ambient sections, not for competing drums.
+            limit = Math.Min(limit, 4.5);
+        }
+        if (compatible && outgoingPulse && incomingPulse)
         {
             // A quarter of a beat of slip is already audible with two kick drums.
-            var drift = Math.Abs(outgoing.Bpm - incoming.Bpm) / 60;
+            var drift = Math.Abs(outgoing.Bpm - equivalentIncoming) / 60;
             if (drift > .001) limit = Math.Min(limit, Math.Max(.6, .22 / drift));
         }
         preferred = Math.Min(preferred, limit);
@@ -27,17 +40,25 @@ internal static class AdaptiveCues
             if (seek > intro + .25)
                 for (double t = intro; t < seek; t += .25)
                     if (b.Intro.At(t).Voice > .36) return;
-            double conflict = 0, density = 0;
+            double conflict = 0, density = 0, crowding = 0, weight = 0;
             for (double t = 0; t < length; t += .25)
             {
                 var old = a.Outro.At(start + t);
                 var fresh = b.Intro.At(seek + t);
                 double both = Math.Sin(Math.PI * (t + .125) / Math.Max(.25, length));
-                conflict += Math.Max(0, both) * Math.Min(old.Voice, fresh.Voice) * .25;
-                density += old.Attack * fresh.Attack * .25;
+                both = Math.Max(0, both);
+                conflict += both * Math.Min(old.Voice, fresh.Voice);
+                density += both * old.Attack * fresh.Attack;
+                crowding += both * Math.Min(old.Level, fresh.Level);
+                weight += both;
             }
+            // Rank the *average* overlap, not its sum. Integrating conflict
+            // made every long fade lose to a rushed one, even at equal density.
+            conflict /= Math.Max(1, weight);
+            density /= Math.Max(1, weight);
+            crowding /= Math.Max(1, weight);
             double score = .55 * Math.Abs(length - preferred) / Math.Max(1, preferred)
-                + 1.4 * conflict + .09 * density + .26 * (seek - intro);
+                + 1.4 * conflict + .09 * density + .14 * crowding + .26 * (seek - intro);
             if (aligned)
             {
                 score -= .28;
@@ -53,7 +74,7 @@ internal static class AdaptiveCues
         {
             double start = end - Math.Min(preferred * factor, limit);
             Consider(start, intro, false);
-            if (!reliable) continue;
+            if (!compatible) continue;
             var snapped = outgoing.Nearest(start);
             var first = incoming.FirstAtOrAfter(intro);
             for (int i = -1; i <= 1; i++)
@@ -69,7 +90,7 @@ internal static class AdaptiveCues
             Math.Abs(a.LastHit - outgoing.Nearest(a.LastHit)) < .1 && best.FadeSeconds >= .8)
             return best with { Effect = EndingEffect.Echo, EchoHit = a.LastHit,
                 EchoDelay = outgoing.PeriodSeconds / 2 };
-        if (best.FadeSeconds >= 2.5 && ending.Tone > .12)
+        if (best.FadeSeconds >= 2.5 && HasSustainedTone(a.Outro, Math.Max(best.StartSeconds, end - 2), end))
             return best with { Effect = EndingEffect.Filter };
         return best;
     }
@@ -86,6 +107,19 @@ internal static class AdaptiveCues
             if (bin.Attack > .22 && bin.Level > .08 && ++hits >= 2) return true;
         }
         return false;
+    }
+
+    private static bool HasSustainedTone(CueSection section, double from, double to)
+    {
+        int tonal = 0, observations = 0;
+        for (double t = from; t < to; t += CueSection.Step)
+        {
+            var bin = section.At(t);
+            if (bin.Level < .08) continue;
+            observations++;
+            if (bin.Tone > .16 && bin.Attack < .38) tonal++;
+        }
+        return observations >= 4 && tonal >= observations * .6;
     }
 }
 

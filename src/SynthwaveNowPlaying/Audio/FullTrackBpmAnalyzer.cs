@@ -15,7 +15,7 @@ internal static class FullTrackBpmAnalyzer
     private const int Bands = 28;
     private const int MinimumBpm = 55;
     private const int MaximumBpm = 200;
-    private static readonly double FrameRate = (double)SampleRate / Hop;
+    internal static readonly double FrameRate = (double)SampleRate / Hop;
 
     public static BpmEstimate Analyze(string file, CancellationToken cancellationToken)
     {
@@ -68,7 +68,7 @@ internal static class FullTrackBpmAnalyzer
         return broad;
     }
 
-    private static List<float> ReadFlux(AudioFileReader reader, double start, double seconds,
+    internal static List<float> ReadFlux(AudioFileReader reader, double start, double seconds,
         CancellationToken cancellationToken, bool brightFocus = false)
     {
         cancellationToken.ThrowIfCancellationRequested();

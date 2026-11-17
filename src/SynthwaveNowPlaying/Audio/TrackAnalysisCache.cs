@@ -12,7 +12,7 @@ internal sealed class TrackAnalysisCache
 {
     private sealed record CacheDocument(int Version, Dictionary<string, TrackAnalysis> Tracks);
     // Invalidate older tempo and outro estimates when either analyzer changes.
-    private const int CacheVersion = 8;
+    private const int CacheVersion = 9;
     private readonly string _filePath;
     private readonly object _sync = new();
     private readonly Dictionary<string, TrackAnalysis> _tracks;
@@ -27,7 +27,8 @@ internal sealed class TrackAnalysisCache
             _tracks = document?.Version is >= 2 and <= CacheVersion
                 ? new Dictionary<string, TrackAnalysis>(document.Tracks.Select(pair =>
                     new KeyValuePair<string, TrackAnalysis>(pair.Key, document.Version >= 4
-                        ? (document.Version < CacheVersion ? pair.Value with
+                        ? (document.Version == 8 ? pair.Value with { Profile = default }
+                        : document.Version < CacheVersion ? pair.Value with
                         {
                             Profile = default, Bpm = 0, BpmConfidence = 0,
                             DeepScanned = false, FromTag = false
@@ -56,7 +57,8 @@ internal sealed class TrackAnalysisCache
     public TrackAnalysis AnalyzeQuick(string file)
     {
         if (TryGet(file, out var cached) && cached.Profile.DurationSeconds > 0) return cached;
-        var profile = TransitionAnalyzer.Analyze(file);
+        var profile = TransitionAnalyzer.Analyze(file, knownTempo: cached is { Bpm: > 0 }
+            ? new BpmEstimate(cached.Bpm, cached.BpmConfidence) : default);
         if (cached is not null && (cached.DeepScanned || cached.Bpm > 0))
             return Store(file, profile, cached.Bpm, cached.BpmConfidence, cached.DeepScanned, cached.FromTag);
         var tagBpm = ReadTagBpm(file);
@@ -70,7 +72,6 @@ internal sealed class TrackAnalysisCache
     {
         if (TryGet(file, out var cached) && cached.DeepScanned) return AnalyzeQuick(file);
         cancellationToken.ThrowIfCancellationRequested();
-        var profile = cached?.Profile.DurationSeconds > 0 ? cached.Profile : TransitionAnalyzer.Analyze(file, cancellationToken);
         var tagBpm = ReadTagBpm(file);
         // A metadata BPM can be stale or wrong, so the explicit scan always
         // checks the audio. The tag helps when the audio is rhythmically ambiguous.
@@ -82,6 +83,7 @@ internal sealed class TrackAnalysisCache
         var estimate = useTag ? new BpmEstimate(tagBpm, 1) : audioEstimate;
         if (!useTag && estimate.Confidence < .19) estimate = default;
         cancellationToken.ThrowIfCancellationRequested();
+        var profile = TransitionAnalyzer.Analyze(file, cancellationToken, estimate);
         return Store(file, profile, estimate.Bpm, estimate.Confidence, true, useTag);
     }
 
@@ -94,9 +96,10 @@ internal sealed class TrackAnalysisCache
         lock (_sync)
         {
             // A playback lookup can finish after a simultaneous full BPM scan.
+            // Keep the deep profile too: its local beat phase used the verified BPM.
             if (!deepScanned && _tracks.TryGetValue(file, out var newer) && newer.DeepScanned &&
                 newer.FileLength == entry.FileLength && newer.LastWriteUtcTicks == entry.LastWriteUtcTicks)
-                entry = newer with { Profile = profile };
+                entry = newer;
             _tracks[file] = entry;
             return entry;
         }
