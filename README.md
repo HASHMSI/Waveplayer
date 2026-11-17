@@ -6,12 +6,12 @@ a live spectrum visualizer, local playlists, customizable colors, and Automix.
 ## Download
 
 [Download the latest Waveplayer update](https://github.com/HASHMSI/Waveplayer/releases/latest).
-For a new installation, use the [v1.0.1 setup](https://github.com/HASHMSI/Waveplayer/releases/download/v1.0.1/WaveplayerSetup.exe); it updates to the latest version when first opened.
+For a new installation, use the [v1.0.3 setup](https://github.com/HASHMSI/Waveplayer/releases/download/v1.0.3/WaveplayerSetup.exe); it updates to the latest version when first opened.
 
 Installed builds quietly check the latest public GitHub Release on startup. Version
-1.0.3 is a bridge for older single-file installations: its release includes
+1.0.4 includes the corrected bridge for older single-file installations: its release includes
 `WaveplayerPortable.zip`, which their existing updater understands. On the next
-launch, the 1.0.3 bridge also migrates itself to the multi-file layout from the
+launch, the bridge also migrates itself to the multi-file layout from the
 same release. New setups install that layout directly from `WaveplayerFiles.zip`. The new
 updater accepts a full `WaveplayerFiles.zip` or, when the installed base version
 matches, a smaller `WaveplayerPatch.zip`. The latter contains changed files and a
