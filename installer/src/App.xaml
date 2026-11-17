@@ -1,0 +1,89 @@
+<Application x:Class="WaveplayerSetup.App" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" StartupUri="MainWindow.xaml">
+ <Application.Resources>
+  <SolidColorBrush x:Key="Ink" Color="#FFF2F8"/>
+  <SolidColorBrush x:Key="Soft" Color="#B7A9CD"/>
+  <Style TargetType="TextBlock"><Setter Property="Foreground" Value="{StaticResource Ink}"/><Setter Property="FontFamily" Value="Bahnschrift"/></Style>
+  <Style x:Key="SetupScrollBar" TargetType="ScrollBar">
+   <Setter Property="Width" Value="12"/>
+   <Setter Property="Margin" Value="8,2,1,2"/>
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ScrollBar">
+    <Grid>
+     <Border Width="5" CornerRadius="3" Background="#302643" HorizontalAlignment="Center"/>
+     <Track x:Name="PART_Track" IsDirectionReversed="True" Focusable="False">
+      <Track.DecreaseRepeatButton><RepeatButton Command="ScrollBar.PageUpCommand" Background="Transparent" BorderThickness="0" Focusable="False" Opacity="0"/></Track.DecreaseRepeatButton>
+      <Track.IncreaseRepeatButton><RepeatButton Command="ScrollBar.PageDownCommand" Background="Transparent" BorderThickness="0" Focusable="False" Opacity="0"/></Track.IncreaseRepeatButton>
+      <Track.Thumb><Thumb MinHeight="32" Cursor="Hand">
+       <Thumb.Template><ControlTemplate TargetType="Thumb">
+        <Border x:Name="ThumbBody" Width="7" CornerRadius="4" BorderBrush="#B0EDC2FF" BorderThickness="1">
+         <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="0,1"><GradientStop Color="#FD76CF"/><GradientStop Color="#A95DDF" Offset=".55"/><GradientStop Color="#63CDEB" Offset="1"/></LinearGradientBrush></Border.Background>
+        </Border>
+        <ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ThumbBody" Property="Width" Value="9"/></Trigger><Trigger Property="IsDragging" Value="True"><Setter TargetName="ThumbBody" Property="Width" Value="10"/></Trigger></ControlTemplate.Triggers>
+       </ControlTemplate></Thumb.Template>
+      </Thumb></Track.Thumb>
+     </Track>
+    </Grid>
+   </ControlTemplate></Setter.Value></Setter>
+  </Style>
+  <Style TargetType="CheckBox">
+   <Setter Property="Foreground" Value="#F6EAFE"/><Setter Property="FontFamily" Value="Bahnschrift"/><Setter Property="Cursor" Value="Hand"/>
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="CheckBox">
+    <StackPanel Orientation="Horizontal">
+     <Border x:Name="Box" Width="21" Height="21" CornerRadius="6" Background="#251C39" BorderBrush="#9163AC" BorderThickness="1" Margin="0,0,9,0">
+      <Path x:Name="Check" Data="M 4,9 L 7,12 L 13,5" Stroke="#FFF9FF" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Opacity="0"/>
+     </Border>
+     <ContentPresenter VerticalAlignment="Center" RecognizesAccessKey="True"/>
+    </StackPanel>
+    <ControlTemplate.Triggers>
+     <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Box" Property="BorderBrush" Value="#7CE6FF"/></Trigger>
+     <Trigger Property="IsChecked" Value="True"><Setter TargetName="Box" Property="Background" Value="#B650A9"/><Setter TargetName="Box" Property="BorderBrush" Value="#FF9CE2"/><Setter TargetName="Check" Property="Opacity" Value="1"/></Trigger>
+     <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value=".45"/></Trigger>
+     <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Box" Property="BorderBrush" Value="White"/></Trigger>
+    </ControlTemplate.Triggers>
+   </ControlTemplate></Setter.Value></Setter>
+  </Style>
+  <Style TargetType="RadioButton">
+   <Setter Property="Foreground" Value="#F6EAFE"/><Setter Property="FontFamily" Value="Bahnschrift"/><Setter Property="Cursor" Value="Hand"/>
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
+    <StackPanel Orientation="Horizontal">
+     <Grid Width="20" Height="20" Margin="0,0,9,0">
+      <Ellipse x:Name="Ring" Fill="#251C39" Stroke="#9163AC" StrokeThickness="1.2"/>
+      <Ellipse x:Name="Dot" Width="10" Height="10" Fill="#FF86D9" Opacity="0"/>
+     </Grid>
+     <ContentPresenter VerticalAlignment="Center" RecognizesAccessKey="True"/>
+    </StackPanel>
+    <ControlTemplate.Triggers>
+     <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Ring" Property="Stroke" Value="#7CE6FF"/></Trigger>
+     <Trigger Property="IsChecked" Value="True"><Setter TargetName="Ring" Property="Stroke" Value="#FF86D9"/><Setter TargetName="Dot" Property="Opacity" Value="1"/></Trigger>
+     <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value=".45"/></Trigger>
+     <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Ring" Property="Stroke" Value="White"/></Trigger>
+    </ControlTemplate.Triggers>
+   </ControlTemplate></Setter.Value></Setter>
+  </Style>
+  <Style TargetType="Button">
+   <Setter Property="Foreground" Value="#F9F3FF"/><Setter Property="Background" Value="#392150"/>
+   <Setter Property="BorderBrush" Value="#A56CC0"/><Setter Property="BorderThickness" Value="1"/>
+   <Setter Property="Padding" Value="15,9"/><Setter Property="Cursor" Value="Hand"/>
+   <Setter Property="FontFamily" Value="Bahnschrift"/><Setter Property="FontWeight" Value="SemiBold"/>
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
+    <Border x:Name="Frame" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+      BorderThickness="1" CornerRadius="10" Padding="{TemplateBinding Padding}" RenderTransformOrigin=".5,.5">
+     <Border.RenderTransform><ScaleTransform ScaleX="1" ScaleY="1"/></Border.RenderTransform>
+     <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    </Border>
+    <ControlTemplate.Triggers>
+     <EventTrigger RoutedEvent="MouseEnter"><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="RenderTransform.ScaleX" To="1.025" Duration="0:0:0.18"/><DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="RenderTransform.ScaleY" To="1.025" Duration="0:0:0.18"/></Storyboard></BeginStoryboard></EventTrigger>
+     <EventTrigger RoutedEvent="MouseLeave"><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="RenderTransform.ScaleX" To="1" Duration="0:0:0.18"/><DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="RenderTransform.ScaleY" To="1" Duration="0:0:0.18"/></Storyboard></BeginStoryboard></EventTrigger>
+     <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Frame" Property="BorderBrush" Value="#FF80E2FF"/><Setter TargetName="Frame" Property="Background" Value="#583073"/></Trigger>
+     <Trigger Property="IsPressed" Value="True"><Setter TargetName="Frame" Property="Opacity" Value=".75"/></Trigger>
+     <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Frame" Property="Opacity" Value=".35"/></Trigger>
+    </ControlTemplate.Triggers>
+   </ControlTemplate></Setter.Value></Setter>
+  </Style>
+  <Style TargetType="TextBox">
+   <Setter Property="FontFamily" Value="Bahnschrift"/><Setter Property="Foreground" Value="#FDF0FF"/>
+   <Setter Property="Background" Value="#291D3C"/><Setter Property="BorderBrush" Value="#815E9E"/>
+   <Setter Property="CaretBrush" Value="#78DCFF"/><Setter Property="Padding" Value="10,8"/>
+  </Style>
+ </Application.Resources>
+</Application>

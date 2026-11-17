@@ -1,0 +1,22 @@
+﻿{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build Waveplayer",
+      "type": "process",
+      "command": "F:\\CodexScratch\\.dotnet\\dotnet.exe",
+      "args": ["build", "${workspaceFolder}\\SynthwaveNowPlaying.csproj", "--verbosity", "minimal"],
+      "options": {
+        "env": {
+          "DOTNET_ROOT": "F:\\CodexScratch\\.dotnet",
+          "DOTNET_CLI_HOME": "F:\\CodexScratch\\dotnet-home",
+          "NUGET_PACKAGES": "F:\\CodexScratch\\nuget",
+          "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1",
+          "DOTNET_CLI_TELEMETRY_OPTOUT": "1"
+        }
+      },
+      "problemMatcher": "$msCompile",
+      "group": { "kind": "build", "isDefault": true }
+    }
+  ]
+}

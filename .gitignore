@@ -1,0 +1,15 @@
+.build/
+.verify/
+**/bin/
+**/obj/
+.vs/
+
+# Generated files and local user data
+backup/
+WaveplayerData/
+installer/payload/
+installer/release/
+installer/dist/
+installer/src/payload.zip
+installer/src/payload.zip.tmp
+promo/node_modules/

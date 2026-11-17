@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>WaveplayerSetup</AssemblyName>
+    <ApplicationIcon>..\..\src\SynthwaveNowPlaying\Assets\Waveplayer.ico</ApplicationIcon>
+    <DefineConstants>$(DefineConstants);SETUP</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Resource Include="$(ApplicationIcon)" Link="Assets\Waveplayer.ico" />
+    <Compile Include="..\..\src\SynthwaveNowPlaying\Visuals\SpectrumView.cs" Link="SpectrumView.cs" />
+    <Compile Include="..\..\src\SynthwaveNowPlaying\Classic\ArchivedVisualizer.cs" Link="ArchivedVisualizer.cs" />
+    <Compile Include="..\..\src\SynthwaveNowPlaying\Settings\SpectrumLab.xaml.cs" Link="SpectrumLab.cs" />
+    <EmbeddedResource Include="..\..\src\SynthwaveNowPlaying\Settings\SpectrumLab.xaml" LogicalName="Settings.SpectrumLab.xaml" />
+    <EmbeddedResource Include="Assets\*.mp3" LogicalName="WaveplayerSetup.Assets.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Assets\spectrum-demo.bin" LogicalName="WaveplayerSetup.Assets.spectrum-demo.bin" />
+    <EmbeddedResource Include="..\..\src\SynthwaveNowPlaying\Classic\SynthwaveNowPlaying.dll" LogicalName="Setup.Classic.dll" />
+    <EmbeddedResource Include="payload.zip" LogicalName="WaveplayerSetup.payload.zip" />
+  </ItemGroup>
+</Project>

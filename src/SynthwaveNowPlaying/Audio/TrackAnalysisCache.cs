@@ -1,0 +1,121 @@
+using System.IO;
+using System.Text.Json;
+
+namespace SynthwaveNowPlaying;
+
+internal sealed record TrackAnalysis(
+    long FileLength, long LastWriteUtcTicks, TransitionProfile Profile,
+    double Bpm, double BpmConfidence, bool DeepScanned, bool FromTag);
+
+/// <summary>Persists song analysis locally and invalidates it when the audio file changes.</summary>
+internal sealed class TrackAnalysisCache
+{
+    private sealed record CacheDocument(int Version, Dictionary<string, TrackAnalysis> Tracks);
+    // Invalidate older tempo and outro estimates when either analyzer changes.
+    private const int CacheVersion = 7;
+    private readonly string _filePath;
+    private readonly object _sync = new();
+    private readonly Dictionary<string, TrackAnalysis> _tracks;
+
+    public TrackAnalysisCache(string? filePath = null)
+    {
+        _filePath = filePath ?? Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NeonWave", "track-analysis.json");
+        try
+        {
+            var document = JsonSerializer.Deserialize<CacheDocument>(File.ReadAllText(_filePath));
+            _tracks = document?.Version is >= 2 and <= CacheVersion
+                ? new Dictionary<string, TrackAnalysis>(document.Tracks.Select(pair =>
+                    new KeyValuePair<string, TrackAnalysis>(pair.Key, document.Version >= 4
+                        ? (document.Version < CacheVersion ? pair.Value with { Profile = default, DeepScanned = false } : pair.Value)
+                        : pair.Value with { Profile = default, DeepScanned = false })), StringComparer.OrdinalIgnoreCase)
+                : new(StringComparer.OrdinalIgnoreCase);
+        }
+        catch { _tracks = new(StringComparer.OrdinalIgnoreCase); }
+    }
+
+    public bool TryGet(string file, out TrackAnalysis result)
+    {
+        result = null!;
+        try
+        {
+            var info = new FileInfo(file);
+            lock (_sync)
+                if (_tracks.TryGetValue(file, out var cached) && cached.FileLength == info.Length &&
+                    cached.LastWriteUtcTicks == info.LastWriteTimeUtc.Ticks)
+                { result = cached; return true; }
+        }
+        catch { }
+        return false;
+    }
+
+    public TrackAnalysis AnalyzeQuick(string file)
+    {
+        if (TryGet(file, out var cached) && cached.Profile.DurationSeconds > 0) return cached;
+        var profile = TransitionAnalyzer.Analyze(file);
+        if (cached is not null)
+            return Store(file, profile, cached.Bpm, cached.BpmConfidence, cached.DeepScanned, cached.FromTag);
+        var tagBpm = ReadTagBpm(file);
+        var bestBeat = profile.IntroBeat.Confidence >= profile.OutroBeat.Confidence
+            ? profile.IntroBeat : profile.OutroBeat;
+        var bpm = tagBpm > 0 ? tagBpm : bestBeat.IsReliable ? bestBeat.Bpm : 0;
+        return Store(file, profile, bpm, tagBpm > 0 ? 1 : bestBeat.Confidence, false, tagBpm > 0);
+    }
+
+    public TrackAnalysis AnalyzeDeep(string file, CancellationToken cancellationToken)
+    {
+        if (TryGet(file, out var cached) && cached.DeepScanned) return AnalyzeQuick(file);
+        cancellationToken.ThrowIfCancellationRequested();
+        var profile = cached?.Profile.DurationSeconds > 0 ? cached.Profile : TransitionAnalyzer.Analyze(file, cancellationToken);
+        var tagBpm = ReadTagBpm(file);
+        // A metadata BPM can be stale or wrong, so the explicit scan always
+        // checks the audio. The tag helps when the audio is rhythmically ambiguous.
+        var audioEstimate = FullTrackBpmAnalyzer.Analyze(file, cancellationToken);
+        var tagRatio = tagBpm > 0 ? audioEstimate.Bpm / tagBpm : 0;
+        var useTag = tagBpm is >= 40 and <= 240 &&
+            (audioEstimate.Bpm <= 0 || audioEstimate.Confidence < .18 ||
+             Math.Abs(tagRatio - 1) < .035 || Math.Abs(tagRatio - .5) < .015 || Math.Abs(tagRatio - 2) < .06);
+        var estimate = useTag ? new BpmEstimate(tagBpm, 1) : audioEstimate;
+        if (!useTag && estimate.Confidence < .19) estimate = default;
+        cancellationToken.ThrowIfCancellationRequested();
+        return Store(file, profile, estimate.Bpm, estimate.Confidence, true, useTag);
+    }
+
+    private TrackAnalysis Store(string file, TransitionProfile profile, double bpm, double confidence, bool deepScanned, bool fromTag)
+    {
+        var info = new FileInfo(file);
+        var entry = new TrackAnalysis(info.Length, info.LastWriteTimeUtc.Ticks, profile,
+            double.IsFinite(bpm) && bpm is >= 40 and <= 240 ? bpm : 0,
+            double.IsFinite(confidence) ? Math.Clamp(confidence, 0, 1) : 0, deepScanned, fromTag);
+        lock (_sync)
+        {
+            // A playback lookup can finish after a simultaneous full BPM scan.
+            if (!deepScanned && _tracks.TryGetValue(file, out var newer) && newer.DeepScanned &&
+                newer.FileLength == entry.FileLength && newer.LastWriteUtcTicks == entry.LastWriteUtcTicks)
+                entry = newer with { Profile = profile };
+            _tracks[file] = entry;
+            return entry;
+        }
+    }
+
+    public void Save()
+    {
+        lock (_sync)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(_filePath)!);
+            var temporary = _filePath + ".tmp";
+            File.WriteAllText(temporary, JsonSerializer.Serialize(new CacheDocument(CacheVersion, _tracks)));
+            File.Move(temporary, _filePath, true);
+        }
+    }
+
+    private static double ReadTagBpm(string file)
+    {
+        try
+        {
+            using var tagged = TagLib.File.Create(file);
+            return tagged.Tag.BeatsPerMinute;
+        }
+        catch { return 0; }
+    }
+}
