@@ -9,8 +9,8 @@ a live spectrum visualizer, local playlists, customizable colors, and Automix.
 The release includes the self-contained `WaveplayerSetup.exe` installer.
 
 Installed builds quietly check the latest public GitHub Release on startup. A newer
-release must include both `WaveplayerSetup.exe` and `WaveplayerPortable.zip` from
-`installer/build-setup.ps1`; the portable package is used by the in-app updater.
+release needs `WaveplayerPortable.zip` from `installer/build-update.ps1` for the
+in-app updater. `WaveplayerSetup.exe` is needed only for a new installation.
 The release tag must be a higher numeric version such as `v1.0.1`. The updater
 verifies GitHub's SHA-256 asset digest before replacing the player and preserves
 local settings. A source push alone does not trigger an update.
@@ -39,6 +39,10 @@ The script publishes the player, creates the setup payload, and publishes
 `installer/release/WaveplayerSetup.exe`. Generated payloads and local user data
 are excluded from Git. The setup project includes short audio previews under
 `installer/src/Assets`.
+
+For an update-only release, run `./installer/build-update.ps1`. It publishes the
+player and creates `installer/release/WaveplayerPortable.zip` without rebuilding
+or uploading the setup. Pass `-Dotnet` when the SDK is not on `PATH`.
 
 Waveplayer is a compact Windows music player and live chillwave visualizer. This folder contains an untouched snapshot of the previous source and the modular working copy for continued development.
 
@@ -105,7 +109,7 @@ During the transition, a 130 Hz split keeps the two tracks' kick and bass region
 
 Settings → **Player** selects Classic or Adaptive timing. Adaptive opens the next decoder before the cue and schedules its entry on the output sample clock. It scores several start times using beat drift, recurring four-beat accents when detectable, and likely voice overlap. Voice and room-tail detection are estimates from the audio. A sharp beat ending can send its last hit into two quiet half-beat echoes. A sustained outgoing tone can receive a gentle low-pass sweep. A detected decay carries into the next track with its own tail. Uncertain cases use a clean overlap. Technical details are in `Audio/TransitionFeatures.cs`, `Audio/AdaptiveCues.cs` and `Audio/AdaptiveDeck.cs`.
 
-Settings → **BPM SCAN** spends 20–60 seconds per new result, with immediate reuse of a completed scan. Up to four minutes of music are analyzed in full. For longer songs the scanner checks seven sections spread across the file. It compares tempo votes and any BPM tag, including half-time and double-time readings. An estimated value is marked with ≈. Insufficient rhythmic evidence gives UNSURE, and reaching the time limit gives TIMED OUT and allows a retry. Closing Settings cancels the scan. Results are cached in `%LOCALAPPDATA%\NeonWave\track-analysis.json`.
+Settings → **BPM SCAN** spends 20–60 seconds per new result, with immediate reuse of a completed scan. Up to four minutes of music are analyzed in full. For longer songs the scanner checks seven sections spread across the file. The detector compares a broad spectral-onset envelope with one that emphasizes percussion transients, then checks agreement across sections and plausible half-time, double-time, and three-to-two rhythmic aliases. It uses a BPM tag only when the audio does not contradict it. This uses the existing NAudio dependency and adds no runtime package. An estimated value is marked with ≈. Insufficient rhythmic evidence gives UNSURE, and reaching the time limit gives TIMED OUT and allows a retry. Closing Settings cancels the scan. Results are cached in `%LOCALAPPDATA%\NeonWave\track-analysis.json`; older BPM estimates are invalidated when the detector changes. BPM is metrically ambiguous for some recordings, so ≈ denotes an estimate rather than a guaranteed original production tempo.
 
 Settings include the selected folder, theme/background image, custom primary and secondary colors with color balance, volume, EQ bands, visualizer sensitivity, widget width, and edit-mode placements. The Custom theme keeps the chosen colors while artwork is shown; built-in themes allow artwork-driven colors. Resizing stores the width; the next launch restores that size and docks the widget to the desktop's bottom-right work area. The pin button controls dragging.
 

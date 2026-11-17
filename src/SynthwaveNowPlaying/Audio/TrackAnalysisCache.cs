@@ -12,7 +12,7 @@ internal sealed class TrackAnalysisCache
 {
     private sealed record CacheDocument(int Version, Dictionary<string, TrackAnalysis> Tracks);
     // Invalidate older tempo and outro estimates when either analyzer changes.
-    private const int CacheVersion = 7;
+    private const int CacheVersion = 8;
     private readonly string _filePath;
     private readonly object _sync = new();
     private readonly Dictionary<string, TrackAnalysis> _tracks;
@@ -27,7 +27,11 @@ internal sealed class TrackAnalysisCache
             _tracks = document?.Version is >= 2 and <= CacheVersion
                 ? new Dictionary<string, TrackAnalysis>(document.Tracks.Select(pair =>
                     new KeyValuePair<string, TrackAnalysis>(pair.Key, document.Version >= 4
-                        ? (document.Version < CacheVersion ? pair.Value with { Profile = default, DeepScanned = false } : pair.Value)
+                        ? (document.Version < CacheVersion ? pair.Value with
+                        {
+                            Profile = default, Bpm = 0, BpmConfidence = 0,
+                            DeepScanned = false, FromTag = false
+                        } : pair.Value)
                         : pair.Value with { Profile = default, DeepScanned = false })), StringComparer.OrdinalIgnoreCase)
                 : new(StringComparer.OrdinalIgnoreCase);
         }
@@ -53,7 +57,7 @@ internal sealed class TrackAnalysisCache
     {
         if (TryGet(file, out var cached) && cached.Profile.DurationSeconds > 0) return cached;
         var profile = TransitionAnalyzer.Analyze(file);
-        if (cached is not null)
+        if (cached is not null && (cached.DeepScanned || cached.Bpm > 0))
             return Store(file, profile, cached.Bpm, cached.BpmConfidence, cached.DeepScanned, cached.FromTag);
         var tagBpm = ReadTagBpm(file);
         var bestBeat = profile.IntroBeat.Confidence >= profile.OutroBeat.Confidence
