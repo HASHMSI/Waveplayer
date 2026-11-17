@@ -15,7 +15,14 @@ internal static class UpdateClient
 {
     private const string LatestRelease = "https://api.github.com/repos/HASHMSI/Waveplayer/releases/latest";
     private static readonly HttpClient Client = CreateClient();
-    internal static Version InstalledVersion => Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0);
+    internal static Version InstalledVersion
+    {
+        get
+        {
+            var version = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0);
+            return new Version(version.Major, version.Minor, Math.Max(0, version.Build));
+        }
+    }
 
     private static HttpClient CreateClient()
     {
