@@ -106,6 +106,12 @@ public partial class MainWindow : Window
             panel.Clip = new RectangleGeometry(new Rect(e.NewSize), 15, 15);
     }
 
+    private void PlaylistContent_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (sender is FrameworkElement content && e.NewSize.Width > 0 && e.NewSize.Height > 0)
+            content.Clip = new RectangleGeometry(new Rect(e.NewSize), 14, 14);
+    }
+
     private void BuildPlaylistRows(PlaylistSource source)
     {
         EndSort(false);

@@ -357,7 +357,7 @@
                       SnapsToDevicePixels="True">
                   <Border.Effect><DropShadowEffect Color="#FFFF39C6" BlurRadius="20" ShadowDepth="2" Opacity="0.45"/></Border.Effect>
                   <Viewbox Stretch="Fill">
-                    <Grid Width="410" Height="276" ClipToBounds="True">
+                    <Grid Width="410" Height="276" ClipToBounds="True" SizeChanged="PlaylistContent_SizeChanged">
                       <local:SynthwaveBackground x:Name="PlaylistBackground" IsHitTestVisible="False" Opacity="0.85"/>
                       <Border Background="#B914102B" IsHitTestVisible="False"/>
                       <Grid Margin="8">
