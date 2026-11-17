@@ -250,7 +250,12 @@
                         <Button x:Name="SettingsControl" Style="{StaticResource WidgetControlButton}" Width="21" Height="19" ToolTip="Open settings" Click="SettingsButton_Click" Margin="0,0,3,0">
                             <TextBlock Text="⚙" FontFamily="Segoe UI Symbol" FontSize="13" Foreground="{DynamicResource AlbumSecondaryBrush}" VerticalAlignment="Center"/>
                         </Button>
-                        <Button x:Name="EqButton" Style="{StaticResource WidgetControlButton}" Content="EQ" Width="28" Height="19" FontSize="7" FontWeight="Bold" Click="EqButton_Click" Margin="0,0,3,0" ToolTip="EQ for music played in this app"/>
+                        <StackPanel x:Name="EqControls" Orientation="Horizontal">
+                            <Button x:Name="EqButton" Style="{StaticResource WidgetControlButton}" Content="EQ" Width="28" Height="19" FontSize="7" FontWeight="Bold" Click="EqButton_Click" Margin="0,0,3,0" ToolTip="EQ for music played in this app"/>
+                            <Button x:Name="EqResetButton" Style="{StaticResource WidgetControlButton}" Width="21" Height="19" Click="EqResetButton_Click" Margin="0,0,3,0" Visibility="Collapsed" ToolTip="Reset EQ to original sound">
+                                <TextBlock Text="↺" FontFamily="Segoe UI Symbol" FontSize="15" Foreground="{DynamicResource AlbumSecondaryBrush}" VerticalAlignment="Center"/>
+                            </Button>
+                        </StackPanel>
                         <Button x:Name="RemixDemoButton" Style="{StaticResource WidgetControlButton}" Content="REMIX (DEMO)" Width="66" Height="19" FontSize="6.3" FontWeight="Bold" Click="RemixDemoButton_Click" Margin="0,0,3,0" ToolTip="Crossfade between local playlist tracks"/>
                         <Button x:Name="PinButton" Style="{StaticResource WidgetControlButton}" Width="21" Height="19" FontSize="8" ToolTip="Pinned · click to unlock movement" Click="PinButton_Click" Margin="0,0,3,0">
                             <Path x:Name="PinIcon" Data="M7,1 L13,1 12,3 11,3 11,7 14,10 14,11 6,11 6,10 9,7 9,3 8,3 Z M10,11 L11,11 10.5,16 Z" Width="12" Height="14" Stretch="Uniform" Fill="{DynamicResource AlbumSecondaryBrush}"/>

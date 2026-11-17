@@ -372,6 +372,7 @@ public partial class MainWindow : Window
         _archived.SetEditing(false);
         EqButton.Content = "EQ";
         for (var band = 0; band < Math.Min(6, _settings.Bands.Length); band++) SetSpectrumGain(band, _settings.EqualizerEnabled ? _settings.Bands[band] : 0);
+        UpdateEqResetButton();
         if (_equalizer is not null) _equalizer.Enabled = _settings.EqualizerEnabled;
         if (_incomingEqualizer is not null) _incomingEqualizer.Enabled = _settings.EqualizerEnabled;
         ApplyPlaybackVolume();

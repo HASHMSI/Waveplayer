@@ -10,7 +10,8 @@ public partial class MainWindow : Window
     private void AlbumArtContent_SizeChanged(object sender, SizeChangedEventArgs e)
     {
         var content = (Grid)sender;
-        double radius = Math.Max(0, AlbumArtFrame.CornerRadius.TopLeft - AlbumArtFrame.BorderThickness.Left);
+        // The artwork follows the neon frame's curve inside its border.
+        double radius = AlbumArtFrame.CornerRadius.TopLeft;
         radius = Math.Min(radius, Math.Min(e.NewSize.Width, e.NewSize.Height) / 2);
         content.Clip = new RectangleGeometry(new Rect(e.NewSize), radius, radius);
     }

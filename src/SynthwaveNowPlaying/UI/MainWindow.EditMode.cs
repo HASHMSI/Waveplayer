@@ -21,7 +21,7 @@ public partial class MainWindow
         AddEditable("brand", BrandBlock);
         AddEditable("status", SourceStatus);
         AddEditable("settings", SettingsControl);
-        AddEditable("eq", EqButton);
+        AddEditable("eq", EqControls);
         AddEditable("pin", PinButton);
         AddEditable("close", CloseControl);
         AddEditable("cover", AlbumArtFrame);

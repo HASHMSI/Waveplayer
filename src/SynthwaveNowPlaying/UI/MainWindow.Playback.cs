@@ -172,7 +172,26 @@ public partial class MainWindow : Window
         _archived.SetEditing(Spectrum.IsEditing);
         EqButton.Content = Spectrum.IsEditing ? "EQ ●" : "EQ";
         EqButton.ToolTip = Spectrum.IsEditing ? "Drag bands to adjust music played in this app" : "EQ for music played in this app";
+        UpdateEqResetButton();
     }
+
+    private void EqResetButton_Click(object sender, RoutedEventArgs e)
+    {
+        for (var band = 0; band < _settings.Bands.Length; band++)
+        {
+            _settings.Bands[band] = 0;
+            SetSpectrumGain(band, 0);
+            _equalizer?.SetGain(band, 0);
+            _incomingEqualizer?.SetGain(band, 0);
+        }
+        UpdateEqResetButton();
+        _settingsSaveTimer.Stop();
+        _settingsSaveTimer.Start();
+    }
+
+    private void UpdateEqResetButton() =>
+        EqResetButton.Visibility = _settings.EqualizerEnabled && _settings.Bands.Any(gain => Math.Abs(gain) >= .05)
+            ? Visibility.Visible : Visibility.Collapsed;
 
     private void Spectrum_BandGainChanged(int band, float gain)
     {
@@ -181,6 +200,7 @@ public partial class MainWindow : Window
         _settings.Bands[band] = gain;
         _equalizer?.SetGain(band, gain);
         _incomingEqualizer?.SetGain(band, gain);
+        UpdateEqResetButton();
         _settingsSaveTimer.Stop();
         _settingsSaveTimer.Start();
     }
