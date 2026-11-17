@@ -5,8 +5,8 @@ a live spectrum visualizer, local playlists, customizable colors, and Automix.
 
 ## Download
 
-[Download the latest Waveplayer for Windows](https://github.com/HASHMSI/Waveplayer/releases/latest).
-The release includes the self-contained `WaveplayerSetup.exe` installer.
+[Download the latest Waveplayer update](https://github.com/HASHMSI/Waveplayer/releases/latest).
+For a new installation, use the [v1.0.1 setup](https://github.com/HASHMSI/Waveplayer/releases/download/v1.0.1/WaveplayerSetup.exe); it updates to the latest version when first opened.
 
 Installed builds quietly check the latest public GitHub Release on startup. A newer
 release needs `WaveplayerPortable.zip` from `installer/build-update.ps1` for the
