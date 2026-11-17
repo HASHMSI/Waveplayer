@@ -124,6 +124,7 @@ The Settings window shows theme previews captured from the actual widget. Hoveri
 
 To return to the pre-refactor source, copy `backup/source-2026-11-14/` into a **new** folder and build it there. Its `Directory.Build.props` still targets the old `F:\CodexScratch\build` output path. The snapshot was not modified during modularization.
 
+With love by MSIHASH X SENIOR B
 ## Installer
 
 The Windows setup is at `installer/release/WaveplayerSetup.exe`. It contains a self-contained player build, the original Pulse visualizer assembly, and a configuration walkthrough. The installer source is in `installer/src/`. The existing per-user settings remain under `%LOCALAPPDATA%\NeonWave` for compatibility with earlier builds.
