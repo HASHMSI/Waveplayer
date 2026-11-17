@@ -3,6 +3,11 @@
 Waveplayer is a compact Windows music player with a synthwave-inspired interface,
 a live spectrum visualizer, local playlists, customizable colors, and Automix.
 
+## Download
+
+[Download Waveplayer v1.0 for Windows](https://github.com/HASHMSI/Waveplayer/releases/tag/v1.0).
+The release includes the self-contained `WaveplayerSetup.exe` installer.
+
 [▶ Watch the introduction video](promo/Neon-Wave.mp4)
 
 ![Waveplayer widget preview](docs/preview-widget.png)
