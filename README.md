@@ -1,5 +1,24 @@
 # Waveplayer / SynthWaveVISSC
 
+Waveplayer is a compact Windows music player with a synthwave-inspired interface,
+a live spectrum visualizer, local playlists, customizable colors, and Automix.
+
+[▶ Watch the introduction video](promo/Neon-Wave.mp4)
+
+![Waveplayer widget preview](docs/preview-widget.png)
+
+![Waveplayer settings preview](docs/preview-settings.png)
+
+The previews and video show an earlier version of the interface under its
+previous name, Neon Wave.
+
+### Features
+
+- Play music from multiple local folders and organize playlists.
+- Choose between Pulse and Glide visualizers.
+- Personalize the widget colors, background, and layout.
+- Use the built-in equalizer and Classic or Adaptive Automix.
+
 ## Build the setup from a fresh clone
 
 On Windows, install the .NET 10 SDK and run `./installer/build-setup.ps1` in PowerShell.
