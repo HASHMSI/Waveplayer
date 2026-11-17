@@ -124,6 +124,7 @@ public partial class MainWindow : Window
             var file = source.Files[index];
             var row = new PlaylistRow(file, source, _trackTitleCache.TryGetValue(file, out var title) ? title : Path.GetFileNameWithoutExtension(file));
             if (_trackMetadataCache.TryGetValue(file, out var metadata)) row.Apply(metadata);
+            if (_analysisCache.TryGet(file, out var analysis)) row.ApplyKey(analysis);
             row.IsCurrent = string.Equals(file, _localTrack, StringComparison.OrdinalIgnoreCase);
             _allPlaylistRows.Add(row);
         }
@@ -404,6 +405,7 @@ public partial class MainWindow : Window
         private BitmapSource? _artwork;
         private bool _isCurrent;
         private bool _dragging;
+        private string _keyText = "";
         public bool IsDragging { get => _dragging; set => Set(ref _dragging, value); }
 
         public string File { get; } = file;
@@ -414,6 +416,17 @@ public partial class MainWindow : Window
         public string DurationText { get => _durationText; private set => Set(ref _durationText, value); }
         public BitmapSource? Artwork { get => _artwork; private set => Set(ref _artwork, value); }
         public bool IsCurrent { get => _isCurrent; set => Set(ref _isCurrent, value); }
+        public string KeyText { get => _keyText; private set => Set(ref _keyText, value); }
+        public Visibility KeyVisibility => KeyText.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
+        public string KeyDetails { get; private set; } = "";
+
+        public void ApplyKey(TrackAnalysis analysis)
+        {
+            KeyText = analysis.KeyScanned ? analysis.Key.Display : "";
+            KeyDetails = analysis.KeyScanned ? $"Estimated musical key: {analysis.Key.Display}" : "Key not scanned";
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(KeyVisibility)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(KeyDetails)));
+        }
 
         public void Apply(TrackMetadata metadata)
         {

@@ -37,6 +37,9 @@ previous name, Neon Wave.
 - Choose between Pulse and Glide visualizers.
 - Personalize the widget colors, background, and layout.
 - Use the built-in equalizer and Classic or Adaptive Automix.
+- Estimate major/minor musical key and Camelot notation in the BPM + KEY LAB;
+  keys appear after the track duration in the playlist and beside the artist
+  in the player. Uncertain harmony is marked UNSURE.
 
 ## Build the setup from a fresh clone
 
@@ -57,6 +60,11 @@ patch ZIP when generated. The release tag must be a higher numeric version.
 Waveplayer is a compact Windows music player and live chillwave visualizer. This folder contains an untouched snapshot of the previous source and the modular working copy for continued development.
 
 ## Layout
+
+Key detection implementation and measured limitations are documented in
+[`docs/key-detector-validation.md`](docs/key-detector-validation.md).
+Run `dotnet run --project tests/KeyDetectorChecks -c Release` for the generated
+signal, tuning, stereo and cancellation checks.
 
 | Path | Purpose |
 | --- | --- |

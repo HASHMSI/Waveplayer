@@ -93,6 +93,9 @@ public partial class MainWindow : Window
     private void ApplyTrackAnalysis(string file, TrackAnalysis analysis)
     {
         _transitionProfiles[file] = analysis.Profile;
+        foreach (var row in _allPlaylistRows.Where(row => string.Equals(row.File, file, StringComparison.OrdinalIgnoreCase)))
+            row.ApplyKey(analysis);
+        if (string.Equals(file, _localTrack, StringComparison.OrdinalIgnoreCase)) RefreshTrackKey(file);
     }
 
     private void MaybeStartDemoCrossfade(double remainingSeconds, double totalSeconds)
@@ -325,6 +328,7 @@ public partial class MainWindow : Window
         _trackMetadataCache[file] = tags;
         TrackTitle.Text = tags.Title;
         ArtistName.Text = tags.Artist;
+        RefreshTrackKey(file);
         AlbumName.Text = string.IsNullOrWhiteSpace(tags.Album) ? Path.GetDirectoryName(file) ?? "" : tags.Album;
         SetAlbumArt(tags.Artwork);
         FallbackCover.Visibility = tags.Artwork is null ? Visibility.Visible : Visibility.Collapsed;

@@ -85,6 +85,7 @@ public partial class MainWindow : Window
         _trackMetadataCache[file] = tags;
         TrackTitle.Text = tags.Title;
         ArtistName.Text = tags.Artist;
+        RefreshTrackKey(file);
         AlbumName.Text = string.IsNullOrWhiteSpace(tags.Album) ? Path.GetDirectoryName(file) ?? "" : tags.Album;
         SourceStatus.Text = "LOCAL · PLAYING";
         SetPlayPauseState(true);

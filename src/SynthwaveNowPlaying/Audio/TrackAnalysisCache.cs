@@ -5,7 +5,8 @@ namespace SynthwaveNowPlaying;
 
 internal sealed record TrackAnalysis(
     long FileLength, long LastWriteUtcTicks, TransitionProfile Profile,
-    double Bpm, double BpmConfidence, bool DeepScanned, bool FromTag);
+    double Bpm, double BpmConfidence, bool DeepScanned, bool FromTag,
+    MusicalKey Key = default, bool KeyScanned = false);
 
 /// <summary>Persists song analysis locally and invalidates it when the audio file changes.</summary>
 internal sealed class TrackAnalysisCache
@@ -70,7 +71,7 @@ internal sealed class TrackAnalysisCache
 
     public TrackAnalysis AnalyzeDeep(string file, CancellationToken cancellationToken)
     {
-        if (TryGet(file, out var cached) && cached.DeepScanned) return AnalyzeQuick(file);
+        if (TryGet(file, out var cached) && cached.DeepScanned) return AnalyzeKey(file, cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
         var tagBpm = ReadTagBpm(file);
         // A metadata BPM can be stale or wrong, so the explicit scan always
@@ -84,7 +85,24 @@ internal sealed class TrackAnalysisCache
         if (!useTag && estimate.Confidence < .19) estimate = default;
         cancellationToken.ThrowIfCancellationRequested();
         var profile = TransitionAnalyzer.Analyze(file, cancellationToken, estimate);
-        return Store(file, profile, estimate.Bpm, estimate.Confidence, true, useTag);
+        Store(file, profile, estimate.Bpm, estimate.Confidence, true, useTag);
+        return AnalyzeKey(file, cancellationToken);
+    }
+
+    public TrackAnalysis AnalyzeKey(string file, CancellationToken token)
+    {
+        var analysis = AnalyzeQuick(file);
+        if (analysis.KeyScanned) return analysis;
+        var key = MusicalKeyAnalyzer.Analyze(file, token);
+        token.ThrowIfCancellationRequested();
+        var info = new FileInfo(file);
+        if (info.Length != analysis.FileLength || info.LastWriteTimeUtc.Ticks != analysis.LastWriteUtcTicks)
+            throw new IOException("The audio file changed during key analysis.");
+        lock (_sync)
+        {
+            var latest = _tracks.GetValueOrDefault(file, analysis);
+            return _tracks[file] = latest with { Key = key, KeyScanned = true };
+        }
     }
 
     private TrackAnalysis Store(string file, TransitionProfile profile, double bpm, double confidence, bool deepScanned, bool fromTag)
@@ -95,6 +113,9 @@ internal sealed class TrackAnalysisCache
             double.IsFinite(confidence) ? Math.Clamp(confidence, 0, 1) : 0, deepScanned, fromTag);
         lock (_sync)
         {
+            if (_tracks.TryGetValue(file, out var keyed) && keyed.KeyScanned &&
+                keyed.FileLength == entry.FileLength && keyed.LastWriteUtcTicks == entry.LastWriteUtcTicks)
+                entry = entry with { Key = keyed.Key, KeyScanned = true };
             // A playback lookup can finish after a simultaneous full BPM scan.
             // Keep the deep profile too: its local beat phase used the verified BPM.
             if (!deepScanned && _tracks.TryGetValue(file, out var newer) && newer.DeepScanned &&

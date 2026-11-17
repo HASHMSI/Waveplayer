@@ -174,7 +174,10 @@
                         <TextBlock Text="{Binding Artist}" FontSize="7.5" Foreground="#FFE3A5E4" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
                     <Border Grid.Column="3" CornerRadius="7" BorderBrush="{DynamicResource AlbumSecondaryBrush}" Opacity="0.82" BorderThickness="1" Background="#3A152647" Padding="6,3" VerticalAlignment="Center" Margin="4,0,2,0">
-                        <TextBlock Text="{Binding DurationText}" FontSize="8" FontWeight="SemiBold" Foreground="#FFD5E6FF"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding DurationText}" FontSize="8" FontWeight="SemiBold" Foreground="#FFD5E6FF" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding KeyText}" Visibility="{Binding KeyVisibility}" ToolTip="{Binding KeyDetails}" FontSize="7" Foreground="{DynamicResource AlbumPrimaryBrush}" VerticalAlignment="Center" Margin="7,0,0,0"/>
+                        </StackPanel>
                     </Border>
                 </Grid>
             </Button>
@@ -312,7 +315,10 @@
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <StackPanel x:Name="TrackInfoBlock" VerticalAlignment="Center">
                                 <TextBlock x:Name="TrackTitle" Text="Waiting for a track" Foreground="{StaticResource Ink}" FontSize="11" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
-                                <TextBlock x:Name="ArtistName" Margin="0,1,0,0" Text="Choose a track from your playlist" Foreground="{DynamicResource AlbumPrimaryBrush}" FontSize="7" TextTrimming="CharacterEllipsis"/>
+                                <DockPanel Margin="0,1,0,0">
+                                    <TextBlock x:Name="TrackKey" DockPanel.Dock="Right" Margin="6,0,0,0" Foreground="{DynamicResource AlbumSecondaryBrush}" FontSize="6.5" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="ArtistName" Text="Choose a track from your playlist" Foreground="{DynamicResource AlbumPrimaryBrush}" FontSize="7" TextTrimming="CharacterEllipsis"/>
+                                </DockPanel>
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                 <Button x:Name="PreviousControl" Style="{StaticResource TransportControlButton}" Width="27" Height="27" ToolTip="Previous track" Click="PreviousButton_Click" Margin="0,0,4,0">

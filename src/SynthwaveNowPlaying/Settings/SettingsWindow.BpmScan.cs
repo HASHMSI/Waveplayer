@@ -57,7 +57,7 @@ internal sealed partial class SettingsWindow
         var heroText = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         heroText.Children.Add(new TextBlock
         {
-            Text = "RHYTHM ANALYSIS  /  NOW PLAYING IN THE SCANNER",
+            Text = "RHYTHM + HARMONY  /  NOW ANALYZING",
             Foreground = Accent, FontSize = 7, FontWeight = FontWeights.Bold
         });
         _scanCurrentTitle = new TextBlock
@@ -67,7 +67,7 @@ internal sealed partial class SettingsWindow
             Margin = new Thickness(0, 7, 0, 2)
         };
         heroText.Children.Add(_scanCurrentTitle);
-        _scanCurrentMeta = new TextBlock { Text = "Press SCAN to analyze BPM without playing audio", Foreground = Muted, FontSize = 8 };
+        _scanCurrentMeta = new TextBlock { Text = "Scan BPM + musical key locally · audio stays silent", Foreground = Muted, FontSize = 8 };
         heroText.Children.Add(_scanCurrentMeta);
         heroGrid.Children.Add(heroText);
         var bars = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, 0, 0) };
@@ -118,7 +118,7 @@ internal sealed partial class SettingsWindow
 
         body.Children.Add(new TextBlock
         {
-            Text = "TRACKS  /  BPM RESULTS", FontSize = 8, FontWeight = FontWeights.Bold,
+            Text = "TRACKS  /  BPM + MUSICAL KEY", FontSize = 8, FontWeight = FontWeights.Bold,
             Foreground = Cyan, Margin = new Thickness(2, 0, 0, 7)
         });
         _scanList = new ListBox
@@ -145,8 +145,8 @@ internal sealed partial class SettingsWindow
             if (_analysisCache.TryGet(track.File, out var cached)) row.SetResult(cached);
             _bpmRows.Add(row);
         }
-        _scanSummary.Text = $"{_bpmRows.Count(row => row.HasBpm)} / {_bpmRows.Count} BPM FOUND";
-        return Card("06  /  BPM SCAN", "Analyze the selected playlist once and reuse its results", body);
+        _scanSummary.Text = $"{_bpmRows.Count(row => row.HasBpm)} BPM · {_bpmRows.Count(row => row.HasKey)} KEYS · {_bpmRows.Count} TRACKS";
+        return Card("06  /  BPM + KEY LAB", "Major / minor · Camelot · cached locally · uncertain keys stay UNSURE", body);
     }
 
     private static DataTemplate BuildBpmRowTemplate()
@@ -171,16 +171,18 @@ internal sealed partial class SettingsWindow
         title.SetValue(TextBlock.FontSizeProperty, 10d);
         title.SetValue(TextBlock.TextTrimmingProperty, TextTrimming.CharacterEllipsis);
         title.SetValue(TextBlock.VerticalAlignmentProperty, VerticalAlignment.Center);
-        title.SetValue(FrameworkElement.MarginProperty, new Thickness(29, 0, 105, 0));
+        title.SetValue(FrameworkElement.MarginProperty, new Thickness(29, 0, 177, 0));
         var bpm = new FrameworkElementFactory(typeof(TextBlock));
         bpm.SetBinding(TextBlock.TextProperty, new Binding(nameof(BpmScanRow.BpmText)));
         bpm.SetValue(TextBlock.ForegroundProperty, Accent);
-        bpm.SetValue(TextBlock.FontSizeProperty, 10d);
+        bpm.SetValue(TextBlock.FontSizeProperty, 9d);
+        bpm.SetValue(TextBlock.TextWrappingProperty, TextWrapping.Wrap);
+        bpm.SetBinding(FrameworkElement.ToolTipProperty, new Binding(nameof(BpmScanRow.AnalysisDetails)));
         bpm.SetValue(TextBlock.FontWeightProperty, FontWeights.Bold);
         bpm.SetValue(TextBlock.TextAlignmentProperty, TextAlignment.Right);
         bpm.SetValue(TextBlock.VerticalAlignmentProperty, VerticalAlignment.Center);
         bpm.SetValue(FrameworkElement.HorizontalAlignmentProperty, HorizontalAlignment.Right);
-        bpm.SetValue(FrameworkElement.WidthProperty, 90d);
+        bpm.SetValue(FrameworkElement.WidthProperty, 165d);
         grid.AppendChild(number);
         grid.AppendChild(title);
         grid.AppendChild(bpm);
@@ -211,13 +213,27 @@ internal sealed partial class SettingsWindow
                 try
                 {
                     var cached = _analysisCache.TryGet(row.File, out var analysis) && analysis.DeepScanned;
-                    if (!cached)
+                    if (cached && !analysis.KeyScanned)
+                    {
+                        _scanCurrentMeta.Text = "BPM cached · checking musical key across the track";
+                        using var keyTimeout = CancellationTokenSource.CreateLinkedTokenSource(cts.Token);
+                        keyTimeout.CancelAfter(TimeSpan.FromSeconds(30));
+                        try
+                        {
+                            analysis = await Task.Run(() => _analysisCache.AnalyzeKey(row.File, keyTimeout.Token), keyTimeout.Token)
+                                .WaitAsync(keyTimeout.Token);
+                        }
+                        catch (OperationCanceledException) when (!cts.IsCancellationRequested)
+                        { throw new TimeoutException("Key analysis timed out."); }
+                        changed++;
+                    }
+                    else if (!cached)
                     {
                         analysis = await TimedBpmScan.RunAsync(token => _analysisCache.AnalyzeDeep(row.File, token), (elapsed, ready) =>
                         {
                             _scanCurrentMeta.Text = ready
                                 ? $"Analysis finished · next result in {Math.Max(0, Math.Ceiling(20 - elapsed.TotalSeconds))} s"
-                                : $"Checking tempo · {elapsed.TotalSeconds:0} / 60 s";
+                                : $"Checking tempo + key · {elapsed.TotalSeconds:0} / 60 s";
                             UpdateScanProgress((completed + Math.Min(.98, elapsed.TotalSeconds / 60)) / _bpmRows.Count);
                         }, cts.Token);
                         changed++;
@@ -231,13 +247,13 @@ internal sealed partial class SettingsWindow
                 row.IsScanning = false;
                 completed++;
                 UpdateScanProgress((double)completed / _bpmRows.Count);
-                _scanSummary.Text = $"{completed} / {_bpmRows.Count} SCANNED  ·  {_bpmRows.Count(item => item.HasBpm)} BPM FOUND";
+                _scanSummary.Text = $"{completed} / {_bpmRows.Count} SCANNED · {_bpmRows.Count(item => item.HasBpm)} BPM · {_bpmRows.Count(item => item.HasKey)} KEYS";
                 if (changed >= 8) { await Task.Run(_analysisCache.Save); changed = 0; }
             }
             if (!cts.IsCancellationRequested)
             {
                 _scanCurrentTitle.Text = "Playlist analysis complete";
-                _scanCurrentMeta.Text = $"{_bpmRows.Count(item => item.HasBpm)} tracks with a usable BPM  ·  results saved locally";
+                _scanCurrentMeta.Text = $"{_bpmRows.Count(item => item.HasBpm)} BPM · {_bpmRows.Count(item => item.HasKey)} usable keys · saved locally";
             }
         }
         catch (OperationCanceledException) { }
@@ -297,6 +313,8 @@ internal sealed partial class SettingsWindow
         public string Title => track.Title;
         public string Number { get; } = number.ToString("00");
         public bool HasBpm { get; private set; }
+        public bool HasKey { get; private set; }
+        public string AnalysisDetails { get; private set; } = "Scan to estimate tempo and musical key.";
         public string BpmText { get => _bpmText; private set { _bpmText = value; Changed(); } }
         public Brush Background { get => _background; private set { _background = value; Changed(); } }
         public bool IsScanning
@@ -316,7 +334,13 @@ internal sealed partial class SettingsWindow
         public void SetResult(TrackAnalysis result)
         {
             HasBpm = result.Bpm > 0;
-            BpmText = HasBpm ? $"{(result.FromTag ? "" : "≈")}{Math.Round(result.Bpm):0} BPM" : result.DeepScanned ? "UNSURE" : "—";
+            HasKey = result.KeyScanned && result.Key.Reliable;
+            var bpm = HasBpm ? $"{(result.FromTag ? "" : "≈")}{Math.Round(result.Bpm):0} BPM" : result.DeepScanned ? "UNSURE BPM" : "— BPM";
+            BpmText = $"{bpm}\n{(result.KeyScanned ? result.Key.Display : "— KEY")}";
+            AnalysisDetails = result.KeyScanned
+                ? $"Musical key: {result.Key.Display}. This is an audio estimate. Ambiguous, modal or changing harmony may be UNSURE."
+                : "Musical key has not been scanned yet. Existing BPM will be reused.";
+            Changed(nameof(AnalysisDetails));
         }
         public void MarkError(string text = "ERROR") { HasBpm = false; BpmText = text; }
         public event PropertyChangedEventHandler? PropertyChanged;
