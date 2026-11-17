@@ -5,8 +5,15 @@ a live spectrum visualizer, local playlists, customizable colors, and Automix.
 
 ## Download
 
-[Download Waveplayer v1.0 for Windows](https://github.com/HASHMSI/Waveplayer/releases/tag/v1.0).
+[Download the latest Waveplayer for Windows](https://github.com/HASHMSI/Waveplayer/releases/latest).
 The release includes the self-contained `WaveplayerSetup.exe` installer.
+
+Installed builds quietly check the latest public GitHub Release on startup. A newer
+release must include both `WaveplayerSetup.exe` and `WaveplayerPortable.zip` from
+`installer/build-setup.ps1`; the portable package is used by the in-app updater.
+The release tag must be a higher numeric version such as `v1.0.1`. The updater
+verifies GitHub's SHA-256 asset digest before replacing the player and preserves
+local settings. A source push alone does not trigger an update.
 
 [▶ Watch the introduction video](promo/Neon-Wave.mp4)
 

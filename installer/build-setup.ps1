@@ -31,4 +31,5 @@ if ([IO.File]::Exists($zip)) {
 
 dotnet publish $setupProject -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishTrimmed=false -o $output
 if ($LASTEXITCODE -ne 0) { throw 'Setup publish failed.' }
+Copy-Item -LiteralPath $zip -Destination (Join-Path $output 'WaveplayerPortable.zip') -Force
 Write-Host "Setup created at $output/WaveplayerSetup.exe"
