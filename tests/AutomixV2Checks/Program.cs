@@ -27,7 +27,7 @@ var next = Synthetic(true) with
 var soft = TransitionPlanner.Plan(180, Synthetic(true), next, AutomixTiming.AdaptiveV2);
 var hard = TransitionPlanner.Plan(180, Synthetic(false), next, AutomixTiming.AdaptiveV2);
 Ensure(soft.FadeSeconds > hard.FadeSeconds, "Gentle outro should allow a longer mix");
-Ensure(soft.Effect == EndingEffect.SpaceEcho, "Sustained outro should choose the new space echo");
+Ensure(soft.Effect == EndingEffect.SweepEcho, "Normal-length v2 transition should choose the audible sweep echo");
 Ensure(hard.Effect == EndingEffect.Clean, "Percussive outro should remain clean");
 Ensure(soft.StartSeconds >= 0 && soft.StartSeconds + soft.FadeSeconds <= 180, "Mix exceeds outgoing track");
 var classic = TransitionPlanner.Plan(180, Synthetic(true), next, AutomixTiming.Classic);
@@ -83,6 +83,31 @@ while (true)
     Ensure(samples < 44100L * 2 * 6, "Tail never stopped");
 }
 Ensure(peak < 1 && samples > 44100L * 2 * 3.2, "Tail level or length invalid");
+// Compare the same tones through the plain fade and the new production effect.
+// A non-trivial RMS difference proves the effect does more than change metadata.
+float[] RenderEffect(EndingEffect effect)
+{
+    var split = new BassSwapSampleProvider(new ToneSource(format));
+    var toneDeck = new AdaptiveDeck(split, split, 0);
+    toneDeck.Arm(new TransitionPlan(0, 0, 4, false, effect, EchoDelay: .24), false, 0, .5, 1, true);
+    var samplesOut = new List<float>();
+    var packet = new float[1024];
+    while (samplesOut.Count < 44100 * 2 * 5)
+    {
+        var read = toneDeck.Read(packet);
+        if (read == 0) break;
+        for (int i = 0; i < read; i++) { Ensure(float.IsFinite(packet[i]), "Sweep sample invalid"); samplesOut.Add(packet[i]); }
+    }
+    return samplesOut.ToArray();
+}
+var cleanPcm = RenderEffect(EndingEffect.Clean);
+var sweepPcm = RenderEffect(EndingEffect.SweepEcho);
+double difference = Math.Sqrt(Enumerable.Range(0, cleanPcm.Length)
+    .Average(i => Math.Pow(cleanPcm[i] - sweepPcm[i], 2)));
+Ensure(difference > .035 && sweepPcm.Max(x => Math.Abs(x)) < 1 &&
+    sweepPcm.TakeLast(200).Max(x => Math.Abs(x)) < .0001,
+    "Sweep isn't distinct, exceeded full scale, or cut off its tail");
+Console.WriteLine($"Sweep vs plain fade RMS difference: {difference:0.000}");
 var firstBass = new BassSwapSampleProvider(new ConstantSource(format));
 var secondBass = new BassSwapSampleProvider(new ConstantSource(format)) { TargetBassGain = 0 };
 var firstDeck = new AdaptiveDeck(firstBass, firstBass, 0);
@@ -210,4 +235,20 @@ sealed class ConstantSource(WaveFormat format) : ISampleProvider
 {
     public WaveFormat WaveFormat => format;
     public int Read(Span<float> buffer) { buffer.Fill(.3f); return buffer.Length; }
+}
+
+sealed class ToneSource(WaveFormat format) : ISampleProvider
+{
+    long frame;
+    public WaveFormat WaveFormat => format;
+    public int Read(Span<float> buffer)
+    {
+        for (int i = 0; i < buffer.Length; i += 2, frame++)
+        {
+            var t = frame / (double)format.SampleRate;
+            var value = (float)(.2 * Math.Sin(2 * Math.PI * 100 * t) + .2 * Math.Sin(2 * Math.PI * 1500 * t));
+            buffer[i] = buffer[i + 1] = value;
+        }
+        return buffer.Length;
+    }
 }

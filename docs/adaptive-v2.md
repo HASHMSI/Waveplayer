@@ -1,18 +1,31 @@
 # Adaptive (v2)
 
+The current V2 sound uses **SweepEcho** for transitions lasting at least 1.5 s:
+the outgoing low frequencies sweep away, a stereo echo trails it, and the new
+track opens through a low-pass filter with a more pronounced volume entrance.
+Echo delay follows a reliable outgoing beat, or uses 240 ms without one. This
+produces an audible effect even without two compatible beat grids. It does not
+claim beat matching in that case. The existing beat-locked DropCut can still
+override it when the rhythmic conditions are met. Short transitions retain a
+plain fade. Classic and original Adaptive do not use SweepEcho.
+
+Regression checks compare the same two-tone signal through SweepEcho and a plain
+fade (RMS difference 0.059), check that the delay tail fades to near zero, and
+render Sunshower → Heartline from the actual library. That rendered sample peaked
+at 0.614, below full scale. These measurements establish an audible signal
+change and output bounds; they do not replace listening to each musical pair.
+
 Player settings now offer three Automix timing choices: Classic, the original
 Adaptive, and Adaptive (v2). The older modes retain their planners and effects.
 
 V2 analyzes the cached intro and outro features, considers several fade lengths,
 and ranks their overlap by simultaneous voice, attacks, level and skipped intro.
 It aligns to local beats only when both beat grids are reliable and the tempos
-are close (including half/double-time equivalence). A sustained, non-vocal outro
-may receive a quiet, decaying 180 ms stereo space echo. A beat-locked drop draws
+are close (including half/double-time equivalence). A beat-locked drop draws
 the outgoing sound down just before a reliable shared beat and brings the new
 track in on it, only when both sections have clear rhythmic attacks and little
-voice. Natural tails are preserved; uncertain beats or vocal collisions use a
-cleaner handoff. V2 trims the summed center
-of a two-song fade and does not boost the incoming level above unity. A late
+voice. Other normal-length transitions use SweepEcho, including natural tails.
+V2 does not boost the incoming level above unity. A late
 render tick inside the silent tail skips the blend rather than forcing a short
 transition after the music has stopped.
 

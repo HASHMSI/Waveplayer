@@ -77,7 +77,12 @@ internal static class TransitionPlannerV2
                         beatSeek + j * newBeat.PeriodSeconds, true);
         }
         if (!double.IsFinite(bestScore)) return legacy;
-        if (a.NaturalTail) return best with { Effect = EndingEffect.NaturalTail };
+        // V2 uses a deliberate filter/echo handoff on normal-length transitions,
+        // even when a trustworthy beat grid is unavailable. Very short clips
+        // keep the plain fade; no beat sync is claimed for an unaligned plan.
+        if (best.FadeSeconds >= 1.5)
+            best = best with { Effect = EndingEffect.SweepEcho,
+                EchoDelay = oldBeat.IsReliable ? Math.Clamp(oldBeat.PeriodSeconds / 2, .14, .38) : .24 };
 
         var oldVoice = Average(a.Outro, Math.Max(best.StartSeconds, end - 2), end, bin => bin.Voice);
         var newVoice = Average(b.Intro, best.NextSeekSeconds,
@@ -87,6 +92,7 @@ internal static class TransitionPlannerV2
         if (best.BeatAligned && best.FadeSeconds >= 1.2 &&
             strongEnding > .45 && entrance > .45 && oldVoice < .25 && newVoice < .25)
             return best with { Effect = EndingEffect.DropCut };
+        if (best.Effect == EndingEffect.SweepEcho) return best;
         if (oldBeat.IsReliable && a.LastHit >= best.StartSeconds &&
             a.LastHit > end - oldBeat.PeriodSeconds * 1.4 &&
             Math.Abs(a.LastHit - oldBeat.Nearest(a.LastHit)) < .09 && best.FadeSeconds >= 1)

@@ -25,6 +25,8 @@ internal sealed class AdaptiveDeck(ISampleProvider input, BassSwapSampleProvider
     private EndingEffect _effect;
     private bool _v2;
     private bool _dropCut;
+    private bool _sweepEcho;
+    private readonly float[] _sweepFilter = new float[input.WaveFormat.Channels];
     private float[] _space = [];
     private float[] _tap = [];
     private float[] _prefetch = [];
@@ -59,6 +61,7 @@ internal sealed class AdaptiveDeck(ISampleProvider input, BassSwapSampleProvider
         Gain = gain;
         _v2 = v2;
         _dropCut = v2 && plan.Effect == EndingEffect.DropCut;
+        _sweepEcho = v2 && plan.Effect == EndingEffect.SweepEcho;
         _fadeFrames = Math.Max(1, (long)Math.Round(plan.FadeSeconds * Rate));
         _switchAt = bassSwitch;
         _switchWidth = plan.BeatAligned ? .035 : .12;
@@ -71,9 +74,10 @@ internal sealed class AdaptiveDeck(ISampleProvider input, BassSwapSampleProvider
             _tap = new float[(int)(Rate * .12) * WaveFormat.Channels];
             _endFrame = Math.Max(_fadeFrames, _hitFrame + _delayFrames * 2 + _tap.Length / WaveFormat.Channels);
         }
-        else if (_effect == EndingEffect.SpaceEcho)
+        else if (_effect is EndingEffect.SpaceEcho or EndingEffect.SweepEcho)
         {
-            _delayFrames = Math.Max(1, (int)Math.Round(Rate * .18));
+            var delay = _sweepEcho ? Math.Clamp(plan.EchoDelay > 0 ? plan.EchoDelay : .24, .14, .38) : .18;
+            _delayFrames = Math.Max(1, (int)Math.Round(Rate * delay));
             _space = new float[_delayFrames * WaveFormat.Channels];
             _endFrame = _fadeFrames + (long)(Rate * .72);
         }
@@ -85,6 +89,7 @@ internal sealed class AdaptiveDeck(ISampleProvider input, BassSwapSampleProvider
         _tap = [];
         _space = [];
         Array.Clear(_filter);
+        Array.Clear(_sweepFilter);
         bass.TargetBassGain = 1;
     }
 
@@ -138,6 +143,9 @@ internal sealed class AdaptiveDeck(ISampleProvider input, BassSwapSampleProvider
         double end = Math.Clamp((double)(Age + frames) / _fadeFrames, 0, 1);
         double Envelope(double p)
         {
+            if (_sweepEcho)
+                return _incoming ? Smooth((p - (_switchAt - .07)) / .21)
+                    : 1 - Smooth((p - (_switchAt - .22)) / .24);
             if (_dropCut)
             {
                 static double Smooth(double x) { x = Math.Clamp(x, 0, 1); return x * x * (3 - 2 * x); }
@@ -156,18 +164,28 @@ internal sealed class AdaptiveDeck(ISampleProvider input, BassSwapSampleProvider
         float wet = (float)(progress * progress * .86);
         float pole = _effect == EndingEffect.Filter
             ? (float)Math.Exp(-2 * Math.PI * (14500 * Math.Pow(.085, progress)) / Rate) : 0;
+        var build = Smooth(progress / Math.Max(.1, _switchAt));
+        var cutoff = _incoming ? 700 * Math.Pow(26, Smooth((progress - _switchAt + .07) / .21))
+            : 45 * Math.Pow(55, build);
+        var sweepPole = _sweepEcho ? (float)Math.Exp(-2 * Math.PI * cutoff / Rate) : 0;
+        bool delayActive = _effect is EndingEffect.SpaceEcho or EndingEffect.SweepEcho;
         for (int frame = 0; frame < frames; frame++, dry += increment)
         {
             long tapIndex = Age + frame - _hitFrame;
-            int spaceBase = _effect == EndingEffect.SpaceEcho
+            int spaceBase = delayActive
                 ? (int)((Age + frame) % _delayFrames) * channels : 0;
-            float spaceLeft = _effect == EndingEffect.SpaceEcho ? _space[spaceBase] : 0;
-            float spaceRight = _effect == EndingEffect.SpaceEcho && channels > 1
+            float spaceLeft = delayActive ? _space[spaceBase] : 0;
+            float spaceRight = delayActive && channels > 1
                 ? _space[spaceBase + 1] : spaceLeft;
             for (int c = 0; c < channels; c++)
             {
                 int index = frame * channels + c;
                 float x = block[index], echo = 0;
+                if (_sweepEcho)
+                {
+                    _sweepFilter[c] = x + sweepPole * (_sweepFilter[c] - x);
+                    x = _incoming ? _sweepFilter[c] : x - (float)build * _sweepFilter[c];
+                }
                 if (_effect == EndingEffect.Filter)
                 {
                     _filter[c] = x + pole * (_filter[c] - x);
@@ -187,18 +205,32 @@ internal sealed class AdaptiveDeck(ISampleProvider input, BassSwapSampleProvider
                     if ((ulong)first < (ulong)tapFrames) echo += .22f * _tap[(int)first * channels + c];
                     if ((ulong)second < (ulong)tapFrames) echo += .09f * _tap[(int)second * channels + c];
                 }
-                else if (_effect == EndingEffect.SpaceEcho)
+                else if (delayActive)
                 {
                     int slot = spaceBase + c;
                     // Cross-feed stereo repeats for movement without another decoder.
                     float delayed = channels == 2 ? (c == 0 ? spaceRight : spaceLeft) : _space[slot];
-                    _space[slot] = x + .27f * delayed;
-                    var arrival = Math.Clamp((progress - .3) / .7, 0, 1);
-                    echo = .18f * (float)(arrival * arrival * (3 - 2 * arrival)) * delayed;
+                    if (_sweepEcho)
+                    {
+                        _space[slot] = x * dry + .42f * delayed;
+                        var arrival = Smooth(progress / Math.Max(.1, _switchAt));
+                        var ageSeconds = (Age + frame) / (double)Rate;
+                        var fadeSeconds = _fadeFrames / (double)Rate;
+                        var tail = 1 - Smooth((ageSeconds - fadeSeconds) / .72);
+                        echo = .42f * (float)(arrival * tail) * delayed;
+                    }
+                    else
+                    {
+                        _space[slot] = x + .27f * delayed;
+                        var arrival = Math.Clamp((progress - .3) / .7, 0, 1);
+                        echo = .18f * (float)(arrival * arrival * (3 - 2 * arrival)) * delayed;
+                    }
                 }
                 block[index] = (x * dry + echo) * Gain;
             }
         }
     }
+
+    private static double Smooth(double x) { x = Math.Clamp(x, 0, 1); return x * x * (3 - 2 * x); }
 }
 

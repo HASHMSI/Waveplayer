@@ -2,7 +2,7 @@ namespace SynthwaveNowPlaying;
 
 internal enum AutomixTiming { Adaptive, Classic, AdaptiveV2 }
 
-internal enum EndingEffect { Clean, Filter, Echo, NaturalTail, SpaceEcho, DropCut }
+internal enum EndingEffect { Clean, Filter, Echo, NaturalTail, SpaceEcho, DropCut, SweepEcho }
 internal readonly record struct TransitionPlan(double StartSeconds, double NextSeekSeconds, double FadeSeconds, bool BeatAligned,
     EndingEffect Effect = EndingEffect.Clean, double EchoHit = 0, double EchoDelay = 0);
 
