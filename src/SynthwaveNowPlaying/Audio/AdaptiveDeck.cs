@@ -24,6 +24,7 @@ internal sealed class AdaptiveDeck(ISampleProvider input, BassSwapSampleProvider
     private double _switchAt, _switchWidth;
     private EndingEffect _effect;
     private bool _v2;
+    private bool _dropCut;
     private float[] _space = [];
     private float[] _tap = [];
     private float[] _prefetch = [];
@@ -57,6 +58,7 @@ internal sealed class AdaptiveDeck(ISampleProvider input, BassSwapSampleProvider
         Age = -waitFrames;
         Gain = gain;
         _v2 = v2;
+        _dropCut = v2 && plan.Effect == EndingEffect.DropCut;
         _fadeFrames = Math.Max(1, (long)Math.Round(plan.FadeSeconds * Rate));
         _switchAt = bassSwitch;
         _switchWidth = plan.BeatAligned ? .035 : .12;
@@ -108,7 +110,9 @@ internal sealed class AdaptiveDeck(ISampleProvider input, BassSwapSampleProvider
             else
             {
                 double progress = Math.Clamp((double)Age / _fadeFrames, 0, 1);
-                var swap = Math.Clamp((progress - _switchAt + _switchWidth) / (2 * _switchWidth), 0, 1);
+                var swap = _dropCut
+                    ? Math.Clamp((progress - _switchAt + .045) / .045, 0, 1)
+                    : Math.Clamp((progress - _switchAt + _switchWidth) / (2 * _switchWidth), 0, 1);
                 swap = swap * swap * (3 - 2 * swap);
                 bass.TargetBassGain = (float)(_incoming ? swap : 1 - swap);
                 int got = ReadSource(block);
@@ -134,6 +138,13 @@ internal sealed class AdaptiveDeck(ISampleProvider input, BassSwapSampleProvider
         double end = Math.Clamp((double)(Age + frames) / _fadeFrames, 0, 1);
         double Envelope(double p)
         {
+            if (_dropCut)
+            {
+                static double Smooth(double x) { x = Math.Clamp(x, 0, 1); return x * x * (3 - 2 * x); }
+                return _incoming
+                    ? Smooth((p - (_switchAt - .005)) / .04)
+                    : 1 - Smooth((p - (_switchAt - .09)) / .09);
+            }
             var shape = _incoming ? Math.Sin(p * Math.PI / 2) : Math.Cos(p * Math.PI / 2);
             // A modest center trim gives two dense recordings room to coexist.
             return _v2 ? shape * (1 - .06 * Math.Pow(Math.Sin(Math.PI * p), 2)) : shape;
@@ -148,6 +159,11 @@ internal sealed class AdaptiveDeck(ISampleProvider input, BassSwapSampleProvider
         for (int frame = 0; frame < frames; frame++, dry += increment)
         {
             long tapIndex = Age + frame - _hitFrame;
+            int spaceBase = _effect == EndingEffect.SpaceEcho
+                ? (int)((Age + frame) % _delayFrames) * channels : 0;
+            float spaceLeft = _effect == EndingEffect.SpaceEcho ? _space[spaceBase] : 0;
+            float spaceRight = _effect == EndingEffect.SpaceEcho && channels > 1
+                ? _space[spaceBase + 1] : spaceLeft;
             for (int c = 0; c < channels; c++)
             {
                 int index = frame * channels + c;
@@ -173,8 +189,9 @@ internal sealed class AdaptiveDeck(ISampleProvider input, BassSwapSampleProvider
                 }
                 else if (_effect == EndingEffect.SpaceEcho)
                 {
-                    int slot = (int)((Age + frame) % _delayFrames) * channels + c;
-                    float delayed = _space[slot];
+                    int slot = spaceBase + c;
+                    // Cross-feed stereo repeats for movement without another decoder.
+                    float delayed = channels == 2 ? (c == 0 ? spaceRight : spaceLeft) : _space[slot];
                     _space[slot] = x + .27f * delayed;
                     var arrival = Math.Clamp((progress - .3) / .7, 0, 1);
                     echo = .18f * (float)(arrival * arrival * (3 - 2 * arrival)) * delayed;

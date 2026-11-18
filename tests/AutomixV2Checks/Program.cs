@@ -40,6 +40,23 @@ var onBeat = TransitionPlanner.Plan(180, Synthetic(true) with { OutroBeat = temp
 var offBeat = TransitionPlanner.Plan(180, Synthetic(true) with { OutroBeat = tempo },
     next with { IntroBeat = new BeatGrid(155, 0, .8) }, AutomixTiming.AdaptiveV2);
 Ensure(onBeat.BeatAligned && !offBeat.BeatAligned, "Beat compatibility gate failed");
+var loudIntro = next with
+{
+    IntroAttack = .8,
+    Features = next.Features! with
+    {
+        Intro = new CueSection(0,
+            Enumerable.Repeat(new CueBin(.72f, 0, .7f, .08f), 80).ToArray(), null)
+    }
+};
+var drop = TransitionPlanner.Plan(180, Synthetic(false) with
+    { OutroBeat = tempo, OutroBlendSeconds = 4 },
+    loudIntro with { IntroBeat = tempo }, AutomixTiming.AdaptiveV2);
+var noDrop = TransitionPlanner.Plan(180, Synthetic(false) with
+    { OutroBeat = tempo, OutroBlendSeconds = 4 },
+    loudIntro with { IntroBeat = new BeatGrid(155, 0, .8) }, AutomixTiming.AdaptiveV2);
+Ensure(drop.Effect == EndingEffect.DropCut && noDrop.Effect != EndingEffect.DropCut,
+    "Drop must require compatible reliable beats");
 var restored = JsonSerializer.Deserialize<AppSettings>(JsonSerializer.Serialize(
     new AppSettings { AutomixTiming = AutomixTiming.AdaptiveV2 }));
 Ensure(restored?.AutomixTiming == AutomixTiming.AdaptiveV2, "V2 preference did not survive JSON");
@@ -66,14 +83,47 @@ while (true)
     Ensure(samples < 44100L * 2 * 6, "Tail never stopped");
 }
 Ensure(peak < 1 && samples > 44100L * 2 * 3.2, "Tail level or length invalid");
-Console.WriteLine($"Synthetic plans: gentle {soft.FadeSeconds:0.00}s/{soft.Effect}, strong {hard.FadeSeconds:0.00}s/{hard.Effect}; tail peak {peak:0.000}");
+var firstBass = new BassSwapSampleProvider(new ConstantSource(format));
+var secondBass = new BassSwapSampleProvider(new ConstantSource(format)) { TargetBassGain = 0 };
+var firstDeck = new AdaptiveDeck(firstBass, firstBass, 0);
+var secondDeck = new AdaptiveDeck(secondBass, secondBass, 0);
+var dropPlan = new TransitionPlan(0, 0, 3, true, EndingEffect.DropCut);
+firstDeck.Arm(dropPlan, false, 0, .5, 1, true);
+secondDeck.Arm(dropPlan, true, 0, .5, 1, true);
+var dropMixer = new MixingSampleProvider(format);
+dropMixer.AddMixerInput(firstDeck);
+dropMixer.AddMixerInput(secondDeck);
+var dropOutput = new PeakLimiterSampleProvider(dropMixer);
+var window = new float[8820]; // 100 ms stereo
+var dropLevels = new double[31];
+double dropJump = 0, prior = 0;
+for (int windowIndex = 0; windowIndex < dropLevels.Length; windowIndex++)
+{
+    var read = dropOutput.Read(window);
+    Ensure(read == window.Length, "Drop render stopped unexpectedly");
+    for (int j = 0; j < read; j += 2)
+    {
+        Ensure(float.IsFinite(window[j]), "Drop produced a non-finite sample");
+        dropLevels[windowIndex] += Math.Abs(window[j]);
+        if (windowIndex > 0 || j > 0) dropJump = Math.Max(dropJump, Math.Abs(window[j] - prior));
+        prior = window[j];
+    }
+    dropLevels[windowIndex] /= read / 2;
+}
+Console.WriteLine($"Drop levels: before {dropLevels[12]:0.000}, cue {dropLevels[14]:0.000}, after {dropLevels[18]:0.000}, jump {dropJump:0.000}");
+Ensure(dropLevels[14] < dropLevels[12] * .8 && dropLevels[18] > dropLevels[14] * 1.5 &&
+    dropJump < .2, "Beat drop failed to duck and recover smoothly");
+Console.WriteLine($"Synthetic plans: gentle {soft.FadeSeconds:0.00}s/{soft.Effect}, strong {hard.FadeSeconds:0.00}s/{hard.Effect}, beat drop {drop.FadeSeconds:0.00}s/{drop.Effect}; tail peak {peak:0.000}");
 
-var files = args.Where(File.Exists).ToArray();
-var profiles = files.Select(file => (File: file, Profile: TransitionAnalyzer.Analyze(file))).ToArray();
+var cached = args.Length > 0 && args[0] == "--cached";
+var files = (cached ? args.Skip(1) : args.AsEnumerable()).Where(File.Exists).ToArray();
+var cache = cached ? new TrackAnalysisCache() : null;
+var profiles = files.Select(file => (File: file, Profile: cached
+    ? cache!.AnalyzeQuick(file).Profile : TransitionAnalyzer.Analyze(file))).ToArray();
 foreach (var (file, profile) in profiles)
 {
     Ensure(profile.DurationSeconds > 1, "Real track analysis failed: " + file);
-    Console.WriteLine($"Analyzed {Path.GetFileName(file)}: {profile.DurationSeconds:0}s, outro silence {profile.OutroSilence:0.0}s");
+    Console.WriteLine($"Analyzed {Path.GetFileName(file)}: {profile.DurationSeconds:0}s, outro silence {profile.OutroSilence:0.0}s, beats {profile.IntroBeat.Confidence:0.00}/{profile.OutroBeat.Confidence:0.00}");
 }
 for (int i = 0; i + 1 < profiles.Length; i++)
 {

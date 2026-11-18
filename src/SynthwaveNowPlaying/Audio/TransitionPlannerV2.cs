@@ -83,6 +83,10 @@ internal static class TransitionPlannerV2
         var newVoice = Average(b.Intro, best.NextSeekSeconds,
             best.NextSeekSeconds + Math.Min(2, best.FadeSeconds), bin => bin.Voice);
         if (oldVoice > .35 || newVoice > .4) return best;
+        // Reserve the dramatic cut for a real shared beat with distinct attacks.
+        if (best.BeatAligned && best.FadeSeconds >= 1.2 &&
+            strongEnding > .45 && entrance > .45 && oldVoice < .25 && newVoice < .25)
+            return best with { Effect = EndingEffect.DropCut };
         if (oldBeat.IsReliable && a.LastHit >= best.StartSeconds &&
             a.LastHit > end - oldBeat.PeriodSeconds * 1.4 &&
             Math.Abs(a.LastHit - oldBeat.Nearest(a.LastHit)) < .09 && best.FadeSeconds >= 1)
