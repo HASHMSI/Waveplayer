@@ -27,7 +27,7 @@ var next = Synthetic(true) with
 var soft = TransitionPlanner.Plan(180, Synthetic(true), next, AutomixTiming.AdaptiveV2);
 var hard = TransitionPlanner.Plan(180, Synthetic(false), next, AutomixTiming.AdaptiveV2);
 Ensure(soft.FadeSeconds > hard.FadeSeconds, "Gentle outro should allow a longer mix");
-Ensure(soft.Effect == EndingEffect.SweepEcho, "Normal-length v2 transition should choose the audible sweep echo");
+Ensure(soft.Effect == EndingEffect.NeonRoll, "Normal-length v2 transition should choose the audible roll");
 Ensure(hard.Effect == EndingEffect.Clean, "Percussive outro should remain clean");
 Ensure(soft.StartSeconds >= 0 && soft.StartSeconds + soft.FadeSeconds <= 180, "Mix exceeds outgoing track");
 var classic = TransitionPlanner.Plan(180, Synthetic(true), next, AutomixTiming.Classic);
@@ -102,12 +102,18 @@ float[] RenderEffect(EndingEffect effect)
 }
 var cleanPcm = RenderEffect(EndingEffect.Clean);
 var sweepPcm = RenderEffect(EndingEffect.SweepEcho);
+var rollPcm = RenderEffect(EndingEffect.NeonRoll);
 double difference = Math.Sqrt(Enumerable.Range(0, cleanPcm.Length)
     .Average(i => Math.Pow(cleanPcm[i] - sweepPcm[i], 2)));
 Ensure(difference > .035 && sweepPcm.Max(x => Math.Abs(x)) < 1 &&
     sweepPcm.TakeLast(200).Max(x => Math.Abs(x)) < .0001,
     "Sweep isn't distinct, exceeded full scale, or cut off its tail");
 Console.WriteLine($"Sweep vs plain fade RMS difference: {difference:0.000}");
+double rollDifference = Math.Sqrt(Enumerable.Range(0, cleanPcm.Length)
+    .Average(i => Math.Pow(cleanPcm[i] - rollPcm[i], 2)));
+Ensure(rollDifference > .035 && rollPcm.Max(x => Math.Abs(x)) < 1 &&
+    rollPcm.TakeLast(200).Max(x => Math.Abs(x)) < .0001, "Roll output or decay invalid");
+Console.WriteLine($"Roll vs plain fade RMS difference: {rollDifference:0.000}");
 var firstBass = new BassSwapSampleProvider(new ConstantSource(format));
 var secondBass = new BassSwapSampleProvider(new ConstantSource(format)) { TargetBassGain = 0 };
 var firstDeck = new AdaptiveDeck(firstBass, firstBass, 0);

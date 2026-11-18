@@ -1,5 +1,13 @@
 # Adaptive (v2)
 
+**NeonRoll** is now the main V2 effect for overlaps of at least 2 s. It freezes
+the most recent short audio slice, repeats it, then halves its duration twice
+approaching the handoff. Slice boundaries taper over 4 ms and stage changes
+crossfade over 5 ms. The roll feeds the stereo echo and filter sweep. The next
+track opens at the handoff. The processing uses preallocated short buffers on
+the audio thread. A reliable beat controls the delay period; otherwise the
+effect uses a fixed musical gesture without claiming tempo matching.
+
 The current V2 sound uses **SweepEcho** for transitions lasting at least 1.5 s:
 the outgoing low frequencies sweep away, a stereo echo trails it, and the new
 track opens through a low-pass filter with a more pronounced volume entrance.

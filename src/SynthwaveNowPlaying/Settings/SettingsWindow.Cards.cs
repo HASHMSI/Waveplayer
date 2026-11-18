@@ -160,7 +160,7 @@ internal sealed partial class SettingsWindow : Window
         timing.Children.Add(ChoiceOption("Automix timing", "Adaptive", "Original adaptive blend", settings.AutomixTiming == AutomixTiming.Adaptive));
         _classicTiming = ChoiceOption("Automix timing", "Classic", "Short blends · about 3–5 seconds", classic);
         timing.Children.Add(_classicTiming);
-        _v2Timing = ChoiceOption("Automix timing", "Adaptive (v2)", "Energy, beats and smoother tails", settings.AutomixTiming == AutomixTiming.AdaptiveV2);
+        _v2Timing = ChoiceOption("Automix timing", "Adaptive (v2)", "Audio roll, filter sweep and echo", settings.AutomixTiming == AutomixTiming.AdaptiveV2);
         timing.Children.Add(_v2Timing);
         body.Children.Add(timing);
         body.Children.Add(new TextBlock { Text = "Audio buffering", Foreground = Ink, FontSize = 11,

@@ -26,6 +26,14 @@ internal sealed class AdaptiveDeck(ISampleProvider input, BassSwapSampleProvider
     private bool _v2;
     private bool _dropCut;
     private bool _sweepEcho;
+    private bool _roll;
+    private float[] _rollHistory = [];
+    private int _rollWrite;
+    private long _rollFreezeAge = -1;
+    private int _rollDivisor = 1;
+    private long _rollStageAge;
+    private readonly float[] _rollLast = new float[input.WaveFormat.Channels];
+    private readonly float[] _rollStageOrigin = new float[input.WaveFormat.Channels];
     private readonly float[] _sweepFilter = new float[input.WaveFormat.Channels];
     private float[] _space = [];
     private float[] _tap = [];
@@ -61,7 +69,14 @@ internal sealed class AdaptiveDeck(ISampleProvider input, BassSwapSampleProvider
         Gain = gain;
         _v2 = v2;
         _dropCut = v2 && plan.Effect == EndingEffect.DropCut;
-        _sweepEcho = v2 && plan.Effect == EndingEffect.SweepEcho;
+        _sweepEcho = v2 && plan.Effect is EndingEffect.SweepEcho or EndingEffect.NeonRoll;
+        _roll = v2 && !incoming && plan.Effect == EndingEffect.NeonRoll;
+        _rollWrite = 0;
+        _rollFreezeAge = -1;
+        _rollDivisor = 1;
+        Array.Clear(_rollLast);
+        Array.Clear(_rollStageOrigin);
+        _rollHistory = _roll ? new float[(int)(Rate * Math.Clamp(plan.EchoDelay > 0 ? plan.EchoDelay : .24, .14, .38)) * WaveFormat.Channels] : [];
         _fadeFrames = Math.Max(1, (long)Math.Round(plan.FadeSeconds * Rate));
         _switchAt = bassSwitch;
         _switchWidth = plan.BeatAligned ? .035 : .12;
@@ -74,7 +89,7 @@ internal sealed class AdaptiveDeck(ISampleProvider input, BassSwapSampleProvider
             _tap = new float[(int)(Rate * .12) * WaveFormat.Channels];
             _endFrame = Math.Max(_fadeFrames, _hitFrame + _delayFrames * 2 + _tap.Length / WaveFormat.Channels);
         }
-        else if (_effect is EndingEffect.SpaceEcho or EndingEffect.SweepEcho)
+        else if (_effect is EndingEffect.SpaceEcho or EndingEffect.SweepEcho or EndingEffect.NeonRoll)
         {
             var delay = _sweepEcho ? Math.Clamp(plan.EchoDelay > 0 ? plan.EchoDelay : .24, .14, .38) : .18;
             _delayFrames = Math.Max(1, (int)Math.Round(Rate * delay));
@@ -88,6 +103,7 @@ internal sealed class AdaptiveDeck(ISampleProvider input, BassSwapSampleProvider
         _armed = false;
         _tap = [];
         _space = [];
+        _rollHistory = [];
         Array.Clear(_filter);
         Array.Clear(_sweepFilter);
         bass.TargetBassGain = 1;
@@ -168,7 +184,7 @@ internal sealed class AdaptiveDeck(ISampleProvider input, BassSwapSampleProvider
         var cutoff = _incoming ? 700 * Math.Pow(26, Smooth((progress - _switchAt + .07) / .21))
             : 45 * Math.Pow(55, build);
         var sweepPole = _sweepEcho ? (float)Math.Exp(-2 * Math.PI * cutoff / Rate) : 0;
-        bool delayActive = _effect is EndingEffect.SpaceEcho or EndingEffect.SweepEcho;
+        bool delayActive = _effect is EndingEffect.SpaceEcho or EndingEffect.SweepEcho or EndingEffect.NeonRoll;
         for (int frame = 0; frame < frames; frame++, dry += increment)
         {
             long tapIndex = Age + frame - _hitFrame;
@@ -177,10 +193,44 @@ internal sealed class AdaptiveDeck(ISampleProvider input, BassSwapSampleProvider
             float spaceLeft = delayActive ? _space[spaceBase] : 0;
             float spaceRight = delayActive && channels > 1
                 ? _space[spaceBase + 1] : spaceLeft;
+            var sampleProgress = (Age + frame) / (double)_fadeFrames;
+            var rollStart = Math.Max(.05, _switchAt - Math.Min(.24, 1.2 * Rate / _fadeFrames));
+            if (_roll && _rollFreezeAge < 0 && sampleProgress >= rollStart)
+            {
+                _rollFreezeAge = Age + frame;
+                _rollStageAge = Age + frame;
+            }
+            var rollFraction = Math.Clamp((sampleProgress - rollStart) / Math.Max(.02, _switchAt - rollStart), 0, 1);
+            int rollDivisor = rollFraction < .42 ? 1 : rollFraction < .75 ? 2 : 4;
+            if (_roll && _rollFreezeAge >= 0 && rollDivisor != _rollDivisor)
+            {
+                _rollDivisor = rollDivisor;
+                _rollStageAge = Age + frame;
+                _rollLast.CopyTo(_rollStageOrigin, 0);
+            }
             for (int c = 0; c < channels; c++)
             {
                 int index = frame * channels + c;
                 float x = block[index], echo = 0;
+                if (_roll)
+                {
+                    int historyFrames = _rollHistory.Length / channels;
+                    if (_rollFreezeAge < 0) _rollHistory[_rollWrite * channels + c] = x;
+                    else
+                    {
+                        // Freeze the most recent slice, then halve its length twice.
+                        // Short tapers at every slice edge prevent digital clicks.
+                        int length = Math.Max(32, historyFrames / _rollDivisor);
+                        int phase = (int)((Age + frame - _rollStageAge) % length);
+                        int position = (_rollWrite + historyFrames - length + phase) % historyFrames;
+                        float taper = (float)Math.Min(1, Math.Min(phase, length - 1 - phase) / (Rate * .004));
+                        var frozen = _rollHistory[position * channels + c] * taper;
+                        frozen = (float)(_rollStageOrigin[c] + Smooth((Age + frame - _rollStageAge) / (Rate * .005)) * (frozen - _rollStageOrigin[c]));
+                        _rollLast[c] = frozen;
+                        float blend = (float)(.93 * Smooth((sampleProgress - rollStart) / .035));
+                        x += blend * (frozen - x);
+                    }
+                }
                 if (_sweepEcho)
                 {
                     _sweepFilter[c] = x + sweepPole * (_sweepFilter[c] - x);
@@ -228,6 +278,7 @@ internal sealed class AdaptiveDeck(ISampleProvider input, BassSwapSampleProvider
                 }
                 block[index] = (x * dry + echo) * Gain;
             }
+            if (_roll && _rollFreezeAge < 0) _rollWrite = (_rollWrite + 1) % (_rollHistory.Length / channels);
         }
     }
 
