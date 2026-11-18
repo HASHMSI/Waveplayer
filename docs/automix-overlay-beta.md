@@ -36,3 +36,6 @@ were inspected for both mixing and completion. A WPF harness checked text bounds
 native nonactivation/toolwindow styles, unchanged foreground focus, pause/resume,
 rotating-disc animation, correct per-track backdrop references, completion and
 the full timed preview automatically closing with no remaining preview timer.
+# Overlay size
+
+Settings → Player → Automix popup / Size offers a 65–180% slider and a silent preview button. While the preview is visible, the slider resizes the actual popup live; Save Settings persists the scale for future transitions. Invalid saved values fall back to 100%.

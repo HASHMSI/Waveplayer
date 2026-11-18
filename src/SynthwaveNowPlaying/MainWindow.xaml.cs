@@ -310,7 +310,8 @@ public partial class MainWindow : Window
         var scanTracks = selectedPlaylist?.Files.Select(file => new ScanTrack(file,
             _trackTitleCache.TryGetValue(file, out var title) ? title : Path.GetFileNameWithoutExtension(file))).ToArray() ?? [];
         var dialog = new SettingsWindow(_settings, (Style)FindResource("NeonScrollBar"), CaptureThemePreviews(),
-            selectedPlaylist?.Name ?? "CURRENT PLAYLIST", scanTracks, _analysisCache, ApplyTrackAnalysis, ReadSpectrumPreview) { Owner = this };
+            selectedPlaylist?.Name ?? "CURRENT PLAYLIST", scanTracks, _analysisCache, ApplyTrackAnalysis, ReadSpectrumPreview,
+            PreviewMixOverlayAtSize, ResizeMixOverlayPreview) { Owner = this };
         dialog.VisualizerPreviewChanged += SelectVisualizer;
         if (dialog.ShowDialog() == true) { _settings.Save(); ApplySettings(); ScanMusicFolders(_settings.GetMusicFolders()); }
         else SelectVisualizer(_settings.ClassicVisualizer);

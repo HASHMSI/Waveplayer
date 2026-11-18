@@ -17,6 +17,19 @@ public partial class AutomixOverlay : Window
     private bool _completed, _closing, _paused;
     internal bool Completed => _completed;
 
+    internal void SetScale(double scale)
+    {
+        scale = double.IsFinite(scale) ? Math.Clamp(scale, .65, 1.8) : 1;
+        Width = 280 * scale;
+        Height = 132 * scale;
+        if (IsLoaded)
+        {
+            var work = SystemParameters.WorkArea;
+            Left = work.Right - Width - 14;
+            Top = work.Top + 14;
+        }
+    }
+
     public AutomixOverlay()
     {
         InitializeComponent();

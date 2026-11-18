@@ -170,6 +170,32 @@ internal sealed partial class SettingsWindow : Window
         body.Children.Add(buffering);
         body.Children.Add(new TextBlock { Text = "Applies to the next track. Both modes keep 16 ms chunks; Stable adds output buffering, not a slower visualizer mode.",
             Foreground = Muted, FontSize = 8, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(1, 7, 1, 0) });
+        body.Children.Add(new TextBlock { Text = "AUTOMIX POPUP  /  SIZE", Foreground = Cyan, FontSize = 9,
+            FontWeight = FontWeights.Bold, Margin = new Thickness(1, 17, 0, 7) });
+        var overlayRow = new Grid();
+        overlayRow.ColumnDefinitions.Add(new ColumnDefinition());
+        overlayRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        overlayRow.Children.Add(new TextBlock { Text = "Overlay size", Foreground = Ink, FontSize = 10 });
+        _overlayScaleValue.Foreground = Accent;
+        _overlayScaleValue.FontSize = 10;
+        _overlayScaleValue.Text = $"{Math.Round(Math.Clamp(double.IsFinite(settings.AutomixOverlayScale) ? settings.AutomixOverlayScale : 1, .65, 1.8) * 100):0}%";
+        Grid.SetColumn(_overlayScaleValue, 1);
+        overlayRow.Children.Add(_overlayScaleValue);
+        body.Children.Add(overlayRow);
+        _overlayScale = SliderControl(.65, 1.8, double.IsFinite(settings.AutomixOverlayScale) ? Math.Clamp(settings.AutomixOverlayScale, .65, 1.8) : 1);
+        _overlayScale.Margin = new Thickness(0, 4, 0, 7);
+        _overlayScale.ValueChanged += (_, _) =>
+        {
+            _overlayScaleValue.Text = $"{Math.Round(_overlayScale.Value * 100):0}%";
+            _resizeAutomixOverlayPreview(_overlayScale.Value);
+        };
+        body.Children.Add(_overlayScale);
+        var preview = ActionButton("▷  PREVIEW POPUP", primary: true);
+        preview.HorizontalAlignment = HorizontalAlignment.Left;
+        preview.Click += (_, _) => _previewAutomixOverlay(_overlayScale.Value);
+        body.Children.Add(preview);
+        body.Children.Add(new TextBlock { Text = "Preview appears in the screen corner. Drag the slider while it is visible to compare sizes.",
+            Foreground = Muted, FontSize = 8, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(1, 7, 1, 0) });
         return Card("04  /  PLAYER", "Playback settings", body);
     }
 
@@ -240,6 +266,7 @@ internal sealed partial class SettingsWindow : Window
             _settings.EqualizerEnabled = _eq.IsChecked == true;
             _settings.AutomixTiming = _classicTiming.IsChecked == true ? AutomixTiming.Classic : AutomixTiming.Adaptive;
             _settings.StableAudioBuffering = _stableAudio.IsChecked == true;
+            _settings.AutomixOverlayScale = _overlayScale.Value;
             RequestClose(true);
         };
         actions.Children.Add(save);

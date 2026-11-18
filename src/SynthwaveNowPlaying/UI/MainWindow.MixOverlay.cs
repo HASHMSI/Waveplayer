@@ -12,6 +12,7 @@ public partial class MainWindow
     {
         _mixOverlay?.Dismiss();
         var view = new AutomixOverlay();
+        view.SetScale(_settings.AutomixOverlayScale);
         _mixOverlay = view;
         view.Closed += (_, _) => { if (ReferenceEquals(_mixOverlay, view)) _mixOverlay = null; };
         TrackMetadata Fallback(string? file, string title) => file is not null && _trackMetadataCache.TryGetValue(file, out var cached)
@@ -78,12 +79,19 @@ public partial class MainWindow
     }
 
     internal void PreviewMixOverlay()
+        => PreviewMixOverlayAtSize(_settings.AutomixOverlayScale);
+
+    private void PreviewMixOverlayAtSize(double scale)
     {
         if (_incomingReader is not null) return;
         var current = _library.FirstOrDefault(file => Path.GetFileNameWithoutExtension(file).Contains("Acedia", StringComparison.OrdinalIgnoreCase))
             ?? _localTrack ?? _library.FirstOrDefault();
         var next = _library.FirstOrDefault(file => Path.GetFileNameWithoutExtension(file).Contains("Heartline", StringComparison.OrdinalIgnoreCase))
             ?? _library.FirstOrDefault(file => !string.Equals(file, current, StringComparison.OrdinalIgnoreCase));
-        CreateMixOverlay(current, next).RunPreview();
+        var overlay = CreateMixOverlay(current, next);
+        overlay.SetScale(scale);
+        overlay.RunPreview();
     }
+
+    private void ResizeMixOverlayPreview(double scale) => _mixOverlay?.SetScale(scale);
 }

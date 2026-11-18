@@ -5,7 +5,8 @@
  AllowsTransparency="True" Background="Transparent" ResizeMode="NoResize"
  ShowActivated="False" ShowInTaskbar="False" Topmost="True" Focusable="False"
  UseLayoutRounding="True">
- <Grid Margin="5" IsHitTestVisible="False" RenderTransformOrigin=".5,.5">
+ <Viewbox Stretch="Fill" IsHitTestVisible="False">
+ <Grid Width="280" Height="132" Margin="0" RenderTransformOrigin=".5,.5">
   <Grid.RenderTransform><TranslateTransform x:Name="Slide"/></Grid.RenderTransform>
   <Border CornerRadius="11" Background="#FA0C0D19" BorderThickness="1" Padding="1">
    <Border.BorderBrush><LinearGradientBrush><GradientStop Color="#FFEE67C7"/><GradientStop Color="#FF62D9F2" Offset="1"/></LinearGradientBrush></Border.BorderBrush>
@@ -76,4 +77,5 @@
    </Grid>
   </Border>
  </Grid>
+ </Viewbox>
 </Window>

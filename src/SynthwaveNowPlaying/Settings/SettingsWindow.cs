@@ -26,6 +26,10 @@ internal sealed partial class SettingsWindow : Window
     private RadioButton _stableAudio = null!;
     private Slider _sensitivity = null!;
     private Slider _volume = null!;
+    private Slider _overlayScale = null!;
+    private readonly TextBlock _overlayScaleValue = new();
+    private readonly Action<double> _previewAutomixOverlay;
+    private readonly Action<double> _resizeAutomixOverlayPreview;
     private readonly TextBlock _sensitivityValue = new();
     private readonly TextBlock _volumeValue = new();
     private readonly List<FrameworkElement> _entranceItems = [];
@@ -45,10 +49,13 @@ internal sealed partial class SettingsWindow : Window
 
     public SettingsWindow(AppSettings settings, Style scrollBarStyle, IReadOnlyDictionary<string, BitmapSource?> themePreviews,
         string playlistName, IReadOnlyList<ScanTrack> scanTracks, TrackAnalysisCache analysisCache,
-        Action<string, TrackAnalysis> onAnalysisReady, Func<float[], bool> readSpectrumPreview)
+        Action<string, TrackAnalysis> onAnalysisReady, Func<float[], bool> readSpectrumPreview,
+        Action<double> previewAutomixOverlay, Action<double> resizeAutomixOverlayPreview)
     {
         _settings = settings;
         _readSpectrumPreview = readSpectrumPreview;
+        _previewAutomixOverlay = previewAutomixOverlay;
+        _resizeAutomixOverlayPreview = resizeAutomixOverlayPreview;
         _themePreviews = themePreviews;
         _playlistName = playlistName;
         _scanTracks = scanTracks;
