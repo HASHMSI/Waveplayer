@@ -135,6 +135,22 @@ for (int i = 0; i + 1 < profiles.Length; i++)
         "Invalid real track plan");
     Console.WriteLine($"Mix {i + 1}: start {plan.StartSeconds:0.00}s, length {plan.FadeSeconds:0.00}s, effect {plan.Effect}, beat {plan.BeatAligned}");
 }
+if (Environment.GetEnvironmentVariable("WAVEPLAYER_FIND_DROP") == "1")
+{
+    int found = 0;
+    for (int i = 0; i < profiles.Length && found < 5; i++)
+        for (int j = 0; j < profiles.Length; j++)
+        {
+            if (i == j) continue;
+            var plan = TransitionPlanner.Plan(profiles[i].Profile.DurationSeconds,
+                profiles[i].Profile, profiles[j].Profile, AutomixTiming.AdaptiveV2);
+            if (plan.Effect != EndingEffect.DropCut) continue;
+            Console.WriteLine($"Drop pair: {profiles[i].File} => {profiles[j].File} ({plan.FadeSeconds:0.00}s)");
+            found++;
+            if (found >= 5) break;
+        }
+    Console.WriteLine($"Drop pairs found: {found}");
+}
 if (profiles.Length >= 2)
 {
     var oldProfile = profiles[0].Profile;
@@ -166,11 +182,15 @@ if (profiles.Length >= 2)
     double peakMix = 0, maxJump = 0;
     var previous = new double[2];
     var output = new float[4096];
+    var previewPath = Environment.GetEnvironmentVariable("WAVEPLAYER_AUTOMIX_PREVIEW");
+    using var previewWriter = string.IsNullOrWhiteSpace(previewPath) ? null
+        : new WaveFileWriter(previewPath, WaveFormat.CreateIeeeFloatWaveFormat(44100, 2));
     var target = (long)((plan.FadeSeconds + .8) * 44100 * 2);
     while (total < target)
     {
         var read = limited.Read(output);
         Ensure(read > 0, "Real mix ended unexpectedly");
+        previewWriter?.WriteSamples(output, 0, read);
         total += read;
         for (int j = 0; j < read; j++)
         {
