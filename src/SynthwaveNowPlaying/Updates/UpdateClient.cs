@@ -113,7 +113,7 @@ internal static class UpdateClient
             if (Process.Start(start) is not null)
             {
                 helperDirectory = null;
-                window.Close();
+                window.ExitApplication();
             }
         }
         catch (Exception ex) { Debug.WriteLine($"Update check skipped: {ex}"); }

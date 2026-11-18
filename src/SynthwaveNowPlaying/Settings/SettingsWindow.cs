@@ -23,6 +23,7 @@ internal sealed partial class SettingsWindow : Window
     private RadioButton _oceanTheme = null!;
     private readonly TextBox _image = new();
     private CheckBox _eq = null!;
+    private RadioButton _stableAudio = null!;
     private Slider _sensitivity = null!;
     private Slider _volume = null!;
     private readonly TextBlock _sensitivityValue = new();

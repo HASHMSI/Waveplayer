@@ -104,6 +104,7 @@ public partial class MainWindow : Window
 
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
+        if (_windowReady) return;
         _windowReady = true;
         _ = UpdateClient.CheckOnLaunchAsync(this);
         DockToDesktopCorner();
@@ -130,6 +131,7 @@ public partial class MainWindow : Window
 
     private void NotifyAudioSignal()
     {
+        if (!_widgetVisible) return;
         if (Interlocked.Exchange(ref _visualizationActive, 1) != 0 || Dispatcher.HasShutdownStarted) return;
         Dispatcher.BeginInvoke(DispatcherPriority.Render, new Action(() =>
         {
@@ -147,6 +149,7 @@ public partial class MainWindow : Window
         {
             _analysisSignal.WaitOne();
             if (!_spectrumThreadRunning) break;
+            if (!_widgetVisible) continue;
             var classic = _classicActive;
             if (!(classic ? _archived.HasRecentSignal() : _audioSamples.HasRecentSignal)) continue;
             var values = classic ? _archived.Compute() : _analyzer.Compute();

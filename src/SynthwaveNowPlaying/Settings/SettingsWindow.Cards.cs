@@ -161,6 +161,15 @@ internal sealed partial class SettingsWindow : Window
         _classicTiming = ChoiceOption("Automix timing", "Classic", "Short blends · about 3–5 seconds", classic);
         timing.Children.Add(_classicTiming);
         body.Children.Add(timing);
+        body.Children.Add(new TextBlock { Text = "Audio buffering", Foreground = Ink, FontSize = 11,
+            FontWeight = FontWeights.SemiBold, Margin = new Thickness(1, 15, 0, 6) });
+        var buffering = new UniformGrid { Columns = 2 };
+        buffering.Children.Add(ChoiceOption("Audio buffering", "16 ms · Original", "Existing playback · 3 buffers", !settings.StableAudioBuffering));
+        _stableAudio = ChoiceOption("Audio buffering", "16 ms · Stable", "8 buffers · more headroom under load", settings.StableAudioBuffering);
+        buffering.Children.Add(_stableAudio);
+        body.Children.Add(buffering);
+        body.Children.Add(new TextBlock { Text = "Applies to the next track. Both modes keep 16 ms chunks; Stable adds output buffering, not a slower visualizer mode.",
+            Foreground = Muted, FontSize = 8, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(1, 7, 1, 0) });
         return Card("04  /  PLAYER", "Playback settings", body);
     }
 
@@ -230,6 +239,7 @@ internal sealed partial class SettingsWindow : Window
             _settings.Volume = _volume.Value;
             _settings.EqualizerEnabled = _eq.IsChecked == true;
             _settings.AutomixTiming = _classicTiming.IsChecked == true ? AutomixTiming.Classic : AutomixTiming.Adaptive;
+            _settings.StableAudioBuffering = _stableAudio.IsChecked == true;
             RequestClose(true);
         };
         actions.Children.Add(save);

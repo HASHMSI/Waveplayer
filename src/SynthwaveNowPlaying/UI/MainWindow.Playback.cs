@@ -104,7 +104,7 @@ public partial class MainWindow : Window
             _localMixer = new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(44100, 2));
             _localMixer.AddMixerInput(_currentMixInput);
             // Short reads feed the spectrum about once per display frame. Keep three buffers for playback headroom.
-            _waveOut = new WaveOut { BufferMilliseconds = 16, NumberOfBuffers = 3 };
+            _waveOut = new WaveOut { BufferMilliseconds = 16, NumberOfBuffers = _settings.StableAudioBuffering ? 8 : 3 };
             _renderGate = new RenderGate(_localMixer);
             var output = new PeakLimiterSampleProvider(_renderGate);
             _waveOut.Init(new SpectrumTap(output, _audioSamples, _archived, () => _classicActive, _analysisSignal, NotifyAudioSignal));

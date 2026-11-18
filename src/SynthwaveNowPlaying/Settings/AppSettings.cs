@@ -22,6 +22,7 @@ internal sealed class AppSettings
     public double CustomMix { get; set; } = .5;
     public bool EqualizerEnabled { get; set; }
     public bool RemixDemoEnabled { get; set; }
+    public bool StableAudioBuffering { get; set; }
     public AutomixTiming AutomixTiming { get; set; } = AutomixTiming.Adaptive;
     public bool ClassicVisualizer { get; set; } = true;
     public double Sensitivity { get; set; } = 1;

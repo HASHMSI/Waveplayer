@@ -33,12 +33,19 @@ previous name, Neon Wave.
 ### Features
 
 - Play music from multiple local folders; new files appear in the library while the player is open.
+- Keep playback in the notification area when the widget closes. Single/double
+  click the palm icon to restore the widget; right-click for playback, settings
+  and Exit. Reopening the shortcut restores the same player instance.
+- In Player settings choose Original (16 ms × 3 buffers) or optional Stable
+  (16 ms × 8 buffers). Buffer mode changes apply to the next track. Stable
+  increases audio headroom and output latency; it is not a guarantee against
+  driver-related glitches. The original mode remains the default.
 - Group playlist tracks by genre or artist tags, and drag tracks into a custom order.
 - Choose between Pulse and Glide visualizers.
 - Personalize the widget colors, background, and layout.
 - Use the built-in equalizer and Classic or Adaptive Automix.
 - Estimate major/minor musical key and Camelot notation in the BPM + KEY LAB;
-  keys appear after the track duration in the playlist and beside the artist
+  keys appear after the track duration in the playlist and below the artist
   in the player. Uncertain harmony is marked UNSURE.
 
 ## Build the setup from a fresh clone
