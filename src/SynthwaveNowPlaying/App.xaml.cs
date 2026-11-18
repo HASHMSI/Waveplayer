@@ -12,6 +12,8 @@ public partial class App : System.Windows.Application
     private Mutex? _instance;
     private EventWaitHandle? _restoreSignal;
     private RegisteredWaitHandle? _restoreWait;
+    private EventWaitHandle? _previewSignal;
+    private RegisteredWaitHandle? _previewWait;
     private bool _ownsInstance;
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -25,8 +27,13 @@ public partial class App : System.Windows.Application
             var identity = System.Security.Principal.WindowsIdentity.GetCurrent().User!.Value;
             var name = @"Local\Waveplayer-" + identity;
             _restoreSignal = new EventWaitHandle(false, EventResetMode.AutoReset, name + "-restore");
+            _previewSignal = new EventWaitHandle(false, EventResetMode.AutoReset, name + "-mixpreview");
             _instance = new Mutex(true, name, out _ownsInstance);
-            if (!_ownsInstance) { _restoreSignal.Set(); Shutdown(); return; }
+            if (!_ownsInstance)
+            {
+                if (e.Args.Contains("--preview-automix")) _previewSignal.Set(); else _restoreSignal.Set();
+                Shutdown(); return;
+            }
             MainWindow = new MainWindow();
             ((MainWindow)MainWindow).InitializeTray();
             _restoreWait = ThreadPool.RegisterWaitForSingleObject(_restoreSignal, (_, _) =>
@@ -34,16 +41,24 @@ public partial class App : System.Windows.Application
                 if (!Dispatcher.HasShutdownStarted)
                     Dispatcher.BeginInvoke(() => (MainWindow as MainWindow)?.RestoreFromTray());
             }, null, Timeout.Infinite, false);
+            _previewWait = ThreadPool.RegisterWaitForSingleObject(_previewSignal, (_, _) =>
+            {
+                if (!Dispatcher.HasShutdownStarted)
+                    Dispatcher.BeginInvoke(() => (MainWindow as MainWindow)?.PreviewMixOverlay());
+            }, null, Timeout.Infinite, false);
             if (e.Args.Length == 2 && e.Args[0] == "--cleanup-updater")
                 _ = UpdateClient.CleanupHelperAsync(e.Args[1]);
             else _ = UpdateClient.CleanupStaleHelpersAsync();
         }
         MainWindow.Show();
+        if (e.Args.Contains("--preview-automix") && MainWindow is MainWindow player) player.PreviewMixOverlay();
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
         _restoreWait?.Unregister(null);
+        _previewWait?.Unregister(null);
+        _previewSignal?.Dispose();
         _restoreSignal?.Dispose();
         if (_ownsInstance) _instance?.ReleaseMutex();
         _instance?.Dispose();

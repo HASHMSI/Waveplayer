@@ -228,11 +228,19 @@ public partial class MainWindow : Window
         if (_adaptiveArmed)
         {
             bool done;
-            lock (_renderGate!) done = ((AdaptiveDeck)_currentMixInput!).Finished;
+            double progress;
+            lock (_renderGate!)
+            {
+                var outgoing = (AdaptiveDeck)_currentMixInput!;
+                done = outgoing.Finished;
+                progress = outgoing.Age < 0 ? -1 : (double)outgoing.Age / (outgoing.Rate * _fadeDurationSeconds);
+            }
+            if (progress >= 0) UpdateMixOverlay(progress);
             if (done) FinishDemoCrossfade();
             return;
         }
         ApplyPlaybackVolume();
+        UpdateMixOverlay(FadeProgress);
         if (FadeProgress >= 1) FinishDemoCrossfade();
     }
 
@@ -291,11 +299,13 @@ public partial class MainWindow : Window
             _fadeStartedUtc = DateTime.UtcNow;
             _crossfadeTimer.Start();
         }
+        _mixOverlay?.SetPaused(_waveOut.PlaybackState != PlaybackState.Playing);
     }
 
     private void FinishDemoCrossfade()
     {
         if (_incomingReader is null || _incomingTrack is null) return;
+        FinishMixOverlay();
         _crossfadeTimer.Stop();
         lock (_renderGate!)
         {
@@ -350,6 +360,8 @@ public partial class MainWindow : Window
 
     private void CancelDemoCrossfade()
     {
+        DismissMixOverlay();
+        _overlayReader = null;
         _crossfadeTimer.Stop();
         if (_incomingReader is null) return;
         lock (_renderGate!)

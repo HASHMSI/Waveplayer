@@ -53,6 +53,13 @@ public partial class MainWindow
         Item("Previous track", "⏮", () => PreviousButton_Click(this, new RoutedEventArgs()));
         Item("Next track", "⏭", () => NextButton_Click(this, new RoutedEventArgs()));
         var remix = Item("Automix", "≈", () => RemixDemoButton_Click(this, new RoutedEventArgs()));
+        var overlay = Item("Automix popup · On", "◉", () =>
+        {
+            _settings.AutomixOverlayEnabled = !_settings.AutomixOverlayEnabled;
+            _settings.Save();
+            if (!_settings.AutomixOverlayEnabled) DismissMixOverlay();
+        });
+        var preview = Item("Preview Automix popup · Beta", "▷", PreviewMixOverlay);
         var pin = Item("Pin widget", "◇", () => PinButton_Click(this, new RoutedEventArgs()));
         Item("Settings", "⚙", () => { RestoreFromTray(); if (IsEnabled) SettingsButton_Click(this, new RoutedEventArgs()); });
         menu.Items.Add(new Separator { Background = new SolidColorBrush(Color.FromRgb(60, 43, 65)), Height = 1, Margin = new Thickness(10, 5, 10, 5) });
@@ -65,9 +72,11 @@ public partial class MainWindow
                 show.Header = IsVisible ? "Hide widget" : "Show widget";
                 play.Header = _waveOut?.PlaybackState == PlaybackState.Playing ? "Pause" : "Play";
                 remix.Header = "Automix · " + (_settings.RemixDemoEnabled ? "On" : "Off");
+                overlay.Header = "Automix popup · " + (_settings.AutomixOverlayEnabled ? "On" : "Off");
                 pin.Header = _pinned ? "Unpin widget" : "Pin widget";
                 foreach (var item in menu.Items.OfType<MenuItem>()) item.IsEnabled = IsEnabled;
                 heading.IsEnabled = false;
+                preview.IsEnabled = IsEnabled && _incomingReader is null;
             }, RestoreFromTray);
             Closing += TrayClosing;
             Closed += (_, _) => _tray?.Dispose();
@@ -97,6 +106,7 @@ public partial class MainWindow
 
     internal void ExitApplication()
     {
+        DismissMixOverlay(immediately: true);
         _allowExit = true; _tray?.Dispose(); Close(); Application.Current?.Shutdown();
     }
 

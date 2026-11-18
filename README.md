@@ -44,6 +44,9 @@ previous name, Neon Wave.
 - Choose between Pulse and Glide visualizers.
 - Personalize the widget colors, background, and layout.
 - Use the built-in equalizer and Classic or Adaptive Automix.
+- Beta: a compact album-art Automix popup while the widget is hidden. Use the
+  tray menu to toggle it or run a silent preview. See
+  [overlay behavior and validation](docs/automix-overlay-beta.md).
 - Estimate major/minor musical key and Camelot notation in the BPM + KEY LAB;
   keys appear after the track duration in the playlist and below the artist
   in the player. Uncertain harmony is marked UNSURE.
