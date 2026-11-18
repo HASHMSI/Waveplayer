@@ -155,11 +155,13 @@ internal sealed partial class SettingsWindow : Window
             Text = "Automix timing", Foreground = Ink, FontSize = 11, FontWeight = FontWeights.SemiBold,
             Margin = new Thickness(1, 15, 0, 6)
         });
-        var timing = new UniformGrid { Columns = 2 };
+        var timing = new UniformGrid { Columns = 3 };
         bool classic = settings.AutomixTiming == AutomixTiming.Classic;
-        timing.Children.Add(ChoiceOption("Automix timing", "Adaptive", "Follows the outro and intro", !classic));
+        timing.Children.Add(ChoiceOption("Automix timing", "Adaptive", "Original adaptive blend", settings.AutomixTiming == AutomixTiming.Adaptive));
         _classicTiming = ChoiceOption("Automix timing", "Classic", "Short blends · about 3–5 seconds", classic);
         timing.Children.Add(_classicTiming);
+        _v2Timing = ChoiceOption("Automix timing", "Adaptive (v2)", "Energy, beats and smoother tails", settings.AutomixTiming == AutomixTiming.AdaptiveV2);
+        timing.Children.Add(_v2Timing);
         body.Children.Add(timing);
         body.Children.Add(new TextBlock { Text = "Audio buffering", Foreground = Ink, FontSize = 11,
             FontWeight = FontWeights.SemiBold, Margin = new Thickness(1, 15, 0, 6) });
@@ -274,7 +276,8 @@ internal sealed partial class SettingsWindow : Window
             _settings.Sensitivity = _sensitivity.Value;
             _settings.Volume = _volume.Value;
             _settings.EqualizerEnabled = _eq.IsChecked == true;
-            _settings.AutomixTiming = _classicTiming.IsChecked == true ? AutomixTiming.Classic : AutomixTiming.Adaptive;
+            _settings.AutomixTiming = _v2Timing.IsChecked == true ? AutomixTiming.AdaptiveV2
+                : _classicTiming.IsChecked == true ? AutomixTiming.Classic : AutomixTiming.Adaptive;
             _settings.StableAudioBuffering = _stableAudio.IsChecked == true;
             _settings.AutomixOverlayScale = _overlayScale.Value;
             _settings.AutomixOverlayEnabled = _overlayEnabled.IsChecked == true;

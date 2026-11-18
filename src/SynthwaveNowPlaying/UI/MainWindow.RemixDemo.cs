@@ -46,7 +46,8 @@ public partial class MainWindow : Window
     private void UpdateRemixDemoButton()
     {
         RemixMode.Text = _settings.RemixDemoEnabled ? "ON" : "DEMO";
-        RemixDemoButton.ToolTip = $"Automix {(_settings.RemixDemoEnabled ? "on" : "off")} · {_settings.AutomixTiming} timing";
+        var timing = _settings.AutomixTiming == AutomixTiming.AdaptiveV2 ? "Adaptive (v2)" : _settings.AutomixTiming.ToString();
+        RemixDemoButton.ToolTip = $"Automix {(_settings.RemixDemoEnabled ? "on" : "off")} · {timing} timing";
         RemixDemoButton.Tag = _settings.RemixDemoEnabled ? "Active" : null;
     }
 
@@ -108,8 +109,11 @@ public partial class MainWindow : Window
         if (remainingSeconds < .5) return;
         var timing = _settings.AutomixTiming;
         var currentProfile = _transitionProfiles.GetValueOrDefault(_localTrack).ForTiming(timing);
-        bool adaptive = timing == AutomixTiming.Adaptive;
+        bool adaptive = timing != AutomixTiming.Classic;
         if (remainingSeconds > Math.Max(currentProfile.OutroSilence, 0) + 15) return;
+        // A late UI tick must not start a very short blend inside a silent tail.
+        if (timing == AutomixTiming.AdaptiveV2 &&
+            remainingSeconds - currentProfile.OutroSilence < .75) return;
         var deck = (AdaptiveDeck)_currentMixInput!;
         // Prepare the decoder ahead of the cue. The render thread owns its exact onset.
         double lead = adaptive ? 1.25 : 0;
@@ -149,7 +153,9 @@ public partial class MainWindow : Window
                 if (adaptive) nextDeck.Prefetch();
                 input = nextDeck;
                 _incomingLevel = currentProfile.OutroRms > .001 && nextProfile.IntroRms > .001
-                    ? Math.Clamp(_currentLevel * currentProfile.OutroRms / nextProfile.IntroRms, .8, 1.2)
+                    ? timing == AutomixTiming.AdaptiveV2
+                        ? Math.Clamp(_currentLevel * currentProfile.OutroRms / nextProfile.IntroRms, .85, 1)
+                        : Math.Clamp(_currentLevel * currentProfile.OutroRms / nextProfile.IntroRms, .8, 1.2)
                     : _currentLevel;
                 // Complete the blend while the outgoing song is still audible.
                 _fadeDurationSeconds = Math.Max(.25, Math.Min(plan.FadeSeconds, remainingSeconds - currentProfile.OutroSilence - .1));
@@ -177,8 +183,8 @@ public partial class MainWindow : Window
                         _fadeDurationSeconds = length;
                         _audioReader!.Volume = 1;
                         reader.Volume = 1;
-                        deck.Arm(effective, false, wait, swap, (float)(_settings.Volume * _currentLevel));
-                        nextDeck.Arm(effective, true, wait, swap, (float)(_settings.Volume * _incomingLevel));
+                        deck.Arm(effective, false, wait, swap, (float)(_settings.Volume * _currentLevel), timing == AutomixTiming.AdaptiveV2);
+                        nextDeck.Arm(effective, true, wait, swap, (float)(_settings.Volume * _incomingLevel), timing == AutomixTiming.AdaptiveV2);
                         _adaptiveArmed = true;
                     }
                     _localMixer.AddMixerInput(input);

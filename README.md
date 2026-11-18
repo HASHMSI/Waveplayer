@@ -41,6 +41,11 @@ previous name, Neon Wave.
 - Choose between Pulse and Glide visualizers.
 - Personalize the widget colors, background, and layout.
 - Use the built-in equalizer and Classic or Adaptive Automix.
+- Select **Adaptive (v2)** in Player settings for a separate transition planner
+  that checks several overlap lengths, avoids strong beat and voice collisions,
+  and adds a restrained space echo only to suitable sustained endings. Classic
+  and the original Adaptive mode remain available. The setup offers the same
+  timing choice.
 - A compact album-art Automix popup while the widget is hidden, with a spinning
   vinyl disc and a 65–180% size control in Player settings. Preview it from
   settings or the tray menu. See

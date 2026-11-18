@@ -24,6 +24,7 @@ internal sealed partial class SettingsWindow : Window
     private readonly TextBox _image = new();
     private CheckBox _eq = null!;
     private RadioButton _stableAudio = null!;
+    private RadioButton _v2Timing = null!;
     private Slider _sensitivity = null!;
     private Slider _volume = null!;
     private Slider _overlayScale = null!;

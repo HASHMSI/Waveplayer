@@ -57,6 +57,12 @@ public partial class MainWindow : Window
                 _theme = previous?["Background"]?.GetValue<string>() ?? _theme;
                 _primary = previous?["CustomPrimary"]?.GetValue<string>() ?? _primary;
                 _secondary = previous?["CustomSecondary"]?.GetValue<string>() ?? _secondary;
+                _timing = previous?["AutomixTiming"]?.GetValue<int>() switch
+                {
+                    1 => "Classic", 2 => "Adaptive (v2)", _ => "Adaptive"
+                };
+                _autoMix = previous?["RemixDemoEnabled"]?.GetValue<bool>() ?? _autoMix;
+                _pulse = previous?["ClassicVisualizer"]?.GetValue<bool>() ?? _pulse;
             }
         }
         catch { }
@@ -455,7 +461,7 @@ public partial class MainWindow : Window
         data["CustomSecondary"] = _secondary;
         data["MusicFolders"] = new JsonArray(_folders.Select(folder => JsonValue.Create(folder)).ToArray());
         data["MusicFolder"] = _folders.FirstOrDefault();
-        data["AutomixTiming"] = _timing == "Classic" ? 1 : 0;
+        data["AutomixTiming"] = _timing == "Classic" ? 1 : _timing == "Adaptive (v2)" ? 2 : 0;
         data["RemixDemoEnabled"] = _autoMix;
         data["ClassicVisualizer"] = _pulse;
         var temporary = path + ".setup-tmp";

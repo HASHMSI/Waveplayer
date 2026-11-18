@@ -63,18 +63,28 @@ public partial class MainWindow
         automix.Checked += (_, _) => _autoMix = true;
         automix.Unchecked += (_, _) => _autoMix = false;
         panel.Children.Add(automix);
-        foreach (var mode in new[] { "Adaptive", "Classic" })
+        foreach (var mode in new[] { "Adaptive (v2)", "Adaptive", "Classic" })
         {
             var card = new StackPanel();
             var radio = new RadioButton { Content = mode.ToUpperInvariant(), GroupName = "Mix", IsChecked = _timing == mode,
                 Foreground = Brush("#FAECFF"), FontWeight = FontWeights.Bold, Margin = new Thickness(0,0,0,6) };
             radio.Checked += (_, _) => _timing = mode;
             card.Children.Add(radio);
-            card.Children.Add(Copy(mode == "Adaptive" ? "Follows the energy and timing of the outro and intro." : "A shorter transition, generally around 3–5 seconds.", 11));
-            card.Children.Add(new MixPreview { Adaptive = mode == "Adaptive", Height = 38, Margin = new Thickness(0, 0, 0, 8) });
-            var play = new Button { Content = "▶  HEAR " + mode.ToUpperInvariant(), HorizontalAlignment = HorizontalAlignment.Left };
-            play.Click += (_, _) => PlayDemo(mode == "Adaptive" ? "mix-adaptive.mp3" : "mix-classic.mp3");
-            card.Children.Add(play);
+            card.Children.Add(Copy(mode switch
+            {
+                "Adaptive (v2)" => "Examines energy, beats and overlap; adds a restrained space echo to suitable endings.",
+                "Adaptive" => "Original energy-aware transition.",
+                _ => "A shorter transition, generally around 3–5 seconds."
+            }, 11));
+            card.Children.Add(new MixPreview { Adaptive = mode != "Classic", Height = 38, Margin = new Thickness(0, 0, 0, 8) });
+            if (mode == "Adaptive (v2)")
+                card.Children.Add(Copy("V2 plans each transition from your own songs; the diagram is illustrative.", 10));
+            else
+            {
+                var play = new Button { Content = "▶  HEAR " + mode.ToUpperInvariant(), HorizontalAlignment = HorizontalAlignment.Left };
+                play.Click += (_, _) => PlayDemo(mode == "Adaptive" ? "mix-adaptive.mp3" : "mix-classic.mp3");
+                card.Children.Add(play);
+            }
             panel.Children.Add(Panel(card));
         }
         panel.Children.Add(Copy("Audio examples illustrate longer and shorter fades with Revolve → Don't Sleep Yet.", 10));
