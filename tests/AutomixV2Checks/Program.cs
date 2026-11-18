@@ -64,6 +64,38 @@ Ensure(restored?.AutomixTiming == AutomixTiming.AdaptiveV2, "V2 preference did n
 // Render the new tail from two constant, stereo tracks. The stream must remain finite,
 // stay below full scale, and end after the tail instead of cutting mid-delay.
 var format = WaveFormat.CreateIeeeFloatWaveFormat(44100, 2);
+foreach (var effect in Enum.GetValues<EndingEffect>())
+{
+    // Production arms 1.25 s early. Before the cue, the old stream must remain
+    // unchanged and the incoming decoder must not consume its first sample.
+    var beforeBass = new BassSwapSampleProvider(new ConstantSource(format));
+    var afterBass = new BassSwapSampleProvider(new ConstantSource(format));
+    var before = new AdaptiveDeck(beforeBass, beforeBass, 0);
+    var after = new AdaptiveDeck(afterBass, afterBass, 0);
+    const int wait = 55125;
+    var scheduled = new TransitionPlan(0, 0, 2, false, effect, EchoHit: .5, EchoDelay: .24);
+    before.Arm(scheduled, false, wait, .5, .8f, true);
+    after.Arm(scheduled, true, wait, .5, .8f, true);
+    var beforePacket = new float[2000];
+    var afterPacket = new float[2000];
+    int advanced = 0;
+    while (advanced < wait)
+    {
+        int count = Math.Min(beforePacket.Length, (wait - advanced) * 2);
+        Ensure(before.Read(beforePacket.AsSpan(0, count)) == count &&
+            after.Read(afterPacket.AsSpan(0, count)) == count, "Prewarm stream stopped");
+        for (int i = 0; i < count; i++)
+            Ensure(Math.Abs(beforePacket[i] - .24f) < .00001 && afterPacket[i] == 0,
+                "Prewarm changed the old track or leaked the new track: " + effect);
+        advanced += count / 2;
+    }
+    Ensure(before.Age == 0 && after.Age == 0 && after.Frame == 0,
+        "Prewarm consumed incoming audio or drifted off the scheduled cue");
+    Ensure(before.Read(beforePacket) == beforePacket.Length && after.Read(afterPacket) == afterPacket.Length,
+        "Scheduled cue stopped playback: " + effect);
+    foreach (var sample in beforePacket.Concat(afterPacket)) Ensure(float.IsFinite(sample), "Cue output invalid");
+}
+Console.WriteLine("PASS: 1.25s decoder prewarm and scheduled cue for every ending effect");
 var source = new ConstantSource(format);
 var bass = new BassSwapSampleProvider(source);
 var deck = new AdaptiveDeck(bass, bass, 0);
@@ -187,7 +219,10 @@ if (profiles.Length >= 2)
     var oldProfile = profiles[0].Profile;
     var newProfile = profiles[1].Profile;
     var plan = TransitionPlanner.Plan(oldProfile.DurationSeconds, oldProfile, newProfile, AutomixTiming.AdaptiveV2);
-    using var oldReader = new AudioFileReader(profiles[0].File) { CurrentTime = TimeSpan.FromSeconds(plan.StartSeconds) };
+    const double prewarmSeconds = 1.25;
+    var scheduledStart = Math.Max(0, plan.StartSeconds - prewarmSeconds);
+    var waitFrames = (long)Math.Round((plan.StartSeconds - scheduledStart) * 44100);
+    using var oldReader = new AudioFileReader(profiles[0].File) { CurrentTime = TimeSpan.FromSeconds(scheduledStart) };
     using var newReader = new AudioFileReader(profiles[1].File) { CurrentTime = TimeSpan.FromSeconds(plan.NextSeekSeconds) };
     ISampleProvider Prepared(AudioFileReader reader, out BassSwapSampleProvider split)
     {
@@ -200,11 +235,11 @@ if (profiles.Length >= 2)
     var oldInput = Prepared(oldReader, out var oldBass);
     var newInput = Prepared(newReader, out var newBass);
     newBass.TargetBassGain = 0;
-    var oldDeck = new AdaptiveDeck(oldInput, oldBass, plan.StartSeconds);
+    var oldDeck = new AdaptiveDeck(oldInput, oldBass, scheduledStart);
     var newDeck = new AdaptiveDeck(newInput, newBass, plan.NextSeekSeconds);
     newDeck.Prefetch();
-    oldDeck.Arm(plan, false, 0, .5, 1, true);
-    newDeck.Arm(plan, true, 0, .5, .9f, true);
+    oldDeck.Arm(plan, false, waitFrames, .5, 1, true);
+    newDeck.Arm(plan, true, waitFrames, .5, .9f, true);
     var mixer = new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(44100, 2));
     mixer.AddMixerInput(oldDeck);
     mixer.AddMixerInput(newDeck);
@@ -216,7 +251,7 @@ if (profiles.Length >= 2)
     var previewPath = Environment.GetEnvironmentVariable("WAVEPLAYER_AUTOMIX_PREVIEW");
     using var previewWriter = string.IsNullOrWhiteSpace(previewPath) ? null
         : new WaveFileWriter(previewPath, WaveFormat.CreateIeeeFloatWaveFormat(44100, 2));
-    var target = (long)((plan.FadeSeconds + .8) * 44100 * 2);
+    var target = (long)((plan.FadeSeconds + prewarmSeconds + .8) * 44100 * 2);
     while (total < target)
     {
         var read = limited.Read(output);

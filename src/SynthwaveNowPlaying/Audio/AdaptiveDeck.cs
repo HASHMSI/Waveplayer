@@ -127,7 +127,19 @@ internal sealed class AdaptiveDeck(ISampleProvider input, BassSwapSampleProvider
             if (Age < 0) frames = (int)Math.Min(frames, -Age);
             if (!_incoming) frames = (int)Math.Min(frames, _endFrame - Age);
             var block = buffer.Slice(written, frames * channels);
-            if (_incoming && Age < 0) block.Clear();
+            if (Age < 0)
+            {
+                if (_incoming) block.Clear();
+                else
+                {
+                    // The decoder is armed before the cue. Keep playing the old
+                    // track normally; effect rings cannot use a negative age.
+                    int got = ReadSource(block);
+                    block[got..].Clear();
+                    Frame += got / channels;
+                    for (int i = 0; i < block.Length; i++) block[i] *= Gain;
+                }
+            }
             else
             {
                 double progress = Math.Clamp((double)Age / _fadeFrames, 0, 1);

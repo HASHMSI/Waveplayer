@@ -1,5 +1,14 @@
 # Adaptive (v2)
 
+Pre-cue playback regression: the player arms both decks 1.25 seconds before the
+transition. Previously the outgoing deck entered the effect renderer with a
+negative age, producing a negative delay-ring index and stopping the audio
+device with IndexOutOfRangeException. Negative-age reads now play the outgoing
+source at its existing gain and keep the incoming source silent without
+consuming it. Effects start only at the cue. The regression test fails with
+the previous binary and passes with the fix; it covers all ending effects and
+Sunshower → Heartline with the real pre-cue scheduling delay.
+
 **NeonRoll** is now the main V2 effect for overlaps of at least 2 s. It freezes
 the most recent short audio slice, repeats it, then halves its duration twice
 approaching the handoff. Slice boundaries taper over 4 ms and stage changes
