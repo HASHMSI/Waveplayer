@@ -172,6 +172,16 @@ internal sealed partial class SettingsWindow : Window
             Foreground = Muted, FontSize = 8, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(1, 7, 1, 0) });
         body.Children.Add(new TextBlock { Text = "AUTOMIX POPUP  /  SIZE", Foreground = Cyan, FontSize = 9,
             FontWeight = FontWeights.Bold, Margin = new Thickness(1, 17, 0, 7) });
+        var overlayToggle = new Grid { Margin = new Thickness(1, 0, 1, 9) };
+        overlayToggle.ColumnDefinitions.Add(new ColumnDefinition());
+        overlayToggle.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        overlayToggle.Children.Add(new TextBlock { Text = "Show during background Automix", Foreground = Ink,
+            FontSize = 10, VerticalAlignment = VerticalAlignment.Center });
+        _overlayEnabled = new CheckBox { IsChecked = settings.AutomixOverlayEnabled,
+            VerticalAlignment = VerticalAlignment.Center, Cursor = Cursors.Hand };
+        Grid.SetColumn(_overlayEnabled, 1);
+        overlayToggle.Children.Add(_overlayEnabled);
+        body.Children.Add(overlayToggle);
         var overlayRow = new Grid();
         overlayRow.ColumnDefinitions.Add(new ColumnDefinition());
         overlayRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -267,6 +277,7 @@ internal sealed partial class SettingsWindow : Window
             _settings.AutomixTiming = _classicTiming.IsChecked == true ? AutomixTiming.Classic : AutomixTiming.Adaptive;
             _settings.StableAudioBuffering = _stableAudio.IsChecked == true;
             _settings.AutomixOverlayScale = _overlayScale.Value;
+            _settings.AutomixOverlayEnabled = _overlayEnabled.IsChecked == true;
             RequestClose(true);
         };
         actions.Children.Add(save);

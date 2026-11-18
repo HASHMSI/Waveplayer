@@ -59,7 +59,7 @@ public partial class MainWindow
             _settings.Save();
             if (!_settings.AutomixOverlayEnabled) DismissMixOverlay();
         });
-        var preview = Item("Preview Automix popup · Beta", "▷", PreviewMixOverlay);
+        var preview = Item("Preview Automix popup", "▷", PreviewMixOverlay);
         var pin = Item("Pin widget", "◇", () => PinButton_Click(this, new RoutedEventArgs()));
         Item("Settings", "⚙", () => { RestoreFromTray(); if (IsEnabled) SettingsButton_Click(this, new RoutedEventArgs()); });
         menu.Items.Add(new Separator { Background = new SolidColorBrush(Color.FromRgb(60, 43, 65)), Height = 1, Margin = new Thickness(10, 5, 10, 5) });

@@ -27,6 +27,7 @@ internal sealed partial class SettingsWindow : Window
     private Slider _sensitivity = null!;
     private Slider _volume = null!;
     private Slider _overlayScale = null!;
+    private CheckBox _overlayEnabled = null!;
     private readonly TextBlock _overlayScaleValue = new();
     private readonly Action<double> _previewAutomixOverlay;
     private readonly Action<double> _resizeAutomixOverlayPreview;

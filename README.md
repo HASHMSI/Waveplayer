@@ -3,23 +3,20 @@
 Waveplayer is a compact Windows music player with a synthwave-inspired interface,
 a live spectrum visualizer, local playlists, customizable colors, and Automix.
 
+![3D illustration of Waveplayer features](docs/waveplayer-3d-features.png)
+
+The illustration presents the features; the interface pictured is conceptual.
+
 ## Download
 
-[Download the latest Waveplayer update](https://github.com/HASHMSI/Waveplayer/releases/latest).
-For a new installation, use the [v1.0.3 setup](https://github.com/HASHMSI/Waveplayer/releases/download/v1.0.3/WaveplayerSetup.exe); it updates to the latest version when first opened.
+[Download Waveplayer Setup for Windows](https://github.com/HASHMSI/Waveplayer/releases/latest/download/WaveplayerSetup.exe).
+This is the complete offline installer. It installs the player, then walks through
+colors, music folders, Automix, and visualizer choices. To replace an older version,
+exit Waveplayer from its tray menu and run the new setup; your preferences remain
+under `%LOCALAPPDATA%\NeonWave`.
 
-Installed builds quietly check the latest public GitHub Release on startup. Version
-1.0.4 includes the corrected bridge for older single-file installations: its release includes
-`WaveplayerPortable.zip`, which their existing updater understands. On the next
-launch, the bridge also migrates itself to the multi-file layout from the
-same release. New setups install that layout directly from `WaveplayerFiles.zip`. The new
-updater accepts a full `WaveplayerFiles.zip` or, when the installed base version
-matches, a smaller `WaveplayerPatch.zip`. The latter contains changed files and a
-manifest listing every target file with its SHA-256. The updater verifies the
-GitHub asset digest and all staged files before replacement, keeps a rollback
-copy, and preserves settings under `%LOCALAPPDATA%`. The first move from a
-single-file installation to multi-file needs the full package. A source push
-alone does not trigger an update.
+Releases from 1.1.0 onward provide the setup EXE as the only download. Automatic
+update checks are disabled in this version; install a later setup manually.
 
 [▶ Watch the introduction video](promo/Neon-Wave.mp4)
 
@@ -27,7 +24,7 @@ alone does not trigger an update.
 
 ![Waveplayer settings preview](docs/preview-settings.png)
 
-The previews and video show an earlier version of the interface under its
+The widget previews and video show an earlier version of the interface under its
 previous name, Neon Wave.
 
 ### Features
@@ -44,8 +41,9 @@ previous name, Neon Wave.
 - Choose between Pulse and Glide visualizers.
 - Personalize the widget colors, background, and layout.
 - Use the built-in equalizer and Classic or Adaptive Automix.
-- Beta: a compact album-art Automix popup while the widget is hidden. Use the
-  tray menu to toggle it or run a silent preview. See
+- A compact album-art Automix popup while the widget is hidden, with a spinning
+  vinyl disc and a 65–180% size control in Player settings. Preview it from
+  settings or the tray menu. See
   [overlay behavior and validation](docs/automix-overlay-beta.md).
 - Estimate major/minor musical key and Camelot notation in the BPM + KEY LAB;
   keys appear after the track duration in the playlist and below the artist
@@ -54,18 +52,9 @@ previous name, Neon Wave.
 ## Build the setup from a fresh clone
 
 On Windows, install the .NET 10 SDK and run `./installer/build-setup.ps1` in PowerShell.
-The script publishes the player, creates the setup payload, and publishes
+The script publishes the player and embeds its complete offline payload in
 `installer/release/WaveplayerSetup.exe`. Generated payloads and local user data
-are excluded from Git. The setup project includes short audio previews under
-`installer/src/Assets`.
-
-For an update-only release, run `./installer/build-update.ps1`. It creates the
-legacy bridge and the full multi-file ZIP. Pass `-BasePayload` pointing at the
-previous release's `installer/payload` snapshot to also create the small patch;
-keep that snapshot outside the generated `installer/payload` directory. Pass
-`-Dotnet` when the SDK is not on `PATH`. Publish the full ZIP and legacy bridge
-on each release while pre-1.0.3 users still need direct updates; publish the
-patch ZIP when generated. The release tag must be a higher numeric version.
+are excluded from Git. Pass `-Dotnet` if the SDK is not on `PATH`.
 
 Waveplayer is a compact Windows music player and live chillwave visualizer. This folder contains an untouched snapshot of the previous source and the modular working copy for continued development.
 

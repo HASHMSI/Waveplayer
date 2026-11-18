@@ -1,7 +1,7 @@
 <Window x:Class="SynthwaveNowPlaying.AutomixOverlay"
  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
- Title="Waveplayer · Automix Beta" Width="280" Height="132" WindowStyle="None"
+ Title="Waveplayer · Automix" Width="280" Height="132" WindowStyle="None"
  AllowsTransparency="True" Background="Transparent" ResizeMode="NoResize"
  ShowActivated="False" ShowInTaskbar="False" Topmost="True" Focusable="False"
  UseLayoutRounding="True">
@@ -17,7 +17,7 @@
       <Image Source="/Waveplayer;component/Assets/Waveplayer.ico" Width="11" Height="11" Margin="0,0,4,0"/>
       <TextBlock Text="WAVEPLAYER" Foreground="#FFF1E9FF" FontSize="7" FontWeight="Bold"/>
      </StackPanel>
-     <TextBlock x:Name="HeaderState" Text="AUTOMIX · BETA" Foreground="#FF85DDF5" FontSize="6" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+     <TextBlock x:Name="HeaderState" Text="AUTOMIX" Foreground="#FF85DDF5" FontSize="6" HorizontalAlignment="Right" VerticalAlignment="Center"/>
     </Grid>
     <Grid Grid.Row="1">
      <Grid x:Name="MixView">

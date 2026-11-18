@@ -1,6 +1,6 @@
-# Automix overlay beta
+# Automix overlay
 
-Local beta: 1.0.7-beta.1. Backup before implementation:
+First developed in the 1.0.7 beta and included in the 1.1.0 setup. Backup before implementation:
 `backup/pre-automix-overlay-beta-2026-11-18/` (source ZIP, installed application files and settings).
 
 The 280×132 DIP popup appears near the top-right work area only while the player
@@ -21,7 +21,7 @@ and Alt-Tab; it does not take focus from the user's working application.
 Tray menu:
 
 - **Automix popup · On/Off** persists the visibility preference.
-- **Preview Automix popup · Beta** runs a seven-second silent animation followed
+- **Preview Automix popup** runs a seven-second silent animation followed
   by the completion state and dismissal. It does not play, seek or reorder music.
 - `Waveplayer.exe --preview-automix` triggers the same preview, including through
   the running player's single-instance signal.
@@ -36,6 +36,6 @@ were inspected for both mixing and completion. A WPF harness checked text bounds
 native nonactivation/toolwindow styles, unchanged foreground focus, pause/resume,
 rotating-disc animation, correct per-track backdrop references, completion and
 the full timed preview automatically closing with no remaining preview timer.
-# Overlay size
+## Overlay size
 
 Settings → Player → Automix popup / Size offers a 65–180% slider and a silent preview button. While the preview is visible, the slider resizes the actual popup live; Save Settings persists the scale for future transitions. Invalid saved values fall back to 100%.

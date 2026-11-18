@@ -106,7 +106,6 @@ public partial class MainWindow : Window
     {
         if (_windowReady) return;
         _windowReady = true;
-        _ = UpdateClient.CheckOnLaunchAsync(this);
         DockToDesktopCorner();
         ApplySettings();
         ScanMusicFolders(_settings.GetMusicFolders());
