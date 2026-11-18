@@ -115,7 +115,7 @@ public partial class MainWindow : Window
             _spectrumThread = new Thread(SpectrumAnalysisLoop)
             {
                 IsBackground = true,
-                Name = "Waveplayer spectrum analysis",
+                Name = "WavePlayer spectrum analysis",
                 Priority = ThreadPriority.AboveNormal
             };
             _spectrumThread.Start();

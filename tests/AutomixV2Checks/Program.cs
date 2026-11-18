@@ -198,7 +198,7 @@ for (int i = 0; i + 1 < profiles.Length; i++)
         "Invalid real track plan");
     Console.WriteLine($"Mix {i + 1}: start {plan.StartSeconds:0.00}s, length {plan.FadeSeconds:0.00}s, effect {plan.Effect}, beat {plan.BeatAligned}");
 }
-if (Environment.GetEnvironmentVariable("WAVEPLAYER_FIND_DROP") == "1")
+if (Environment.GetEnvironmentVariable("WavePlayer_FIND_DROP") == "1")
 {
     int found = 0;
     for (int i = 0; i < profiles.Length && found < 5; i++)
@@ -248,7 +248,7 @@ if (profiles.Length >= 2)
     double peakMix = 0, maxJump = 0;
     var previous = new double[2];
     var output = new float[4096];
-    var previewPath = Environment.GetEnvironmentVariable("WAVEPLAYER_AUTOMIX_PREVIEW");
+    var previewPath = Environment.GetEnvironmentVariable("WavePlayer_AUTOMIX_PREVIEW");
     using var previewWriter = string.IsNullOrWhiteSpace(previewPath) ? null
         : new WaveFileWriter(previewPath, WaveFormat.CreateIeeeFloatWaveFormat(44100, 2));
     var target = (long)((plan.FadeSeconds + prewarmSeconds + .8) * 44100 * 2);

@@ -52,7 +52,7 @@ internal sealed partial class SettingsWindow
         });
         railStack.Children.Add(new TextBlock
         {
-            Text = "WAVEPLAYER  •  LOCAL PLAYER", FontSize = 7,
+            Text = "WavePlayer  •  LOCAL PLAYER", FontSize = 7,
             Foreground = Muted, Margin = new Thickness(7, 0, 0, 0)
         });
         railStack.Children.Add(new TextBlock

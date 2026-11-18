@@ -2,7 +2,7 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Build Waveplayer",
+      "label": "Build WavePlayer",
       "type": "process",
       "command": "F:\\CodexScratch\\.dotnet\\dotnet.exe",
       "args": ["build", "${workspaceFolder}\\SynthwaveNowPlaying.csproj", "--verbosity", "minimal"],

@@ -6,7 +6,7 @@
 
 # Generated files and local user data
 backup/
-WaveplayerData/
+WavePlayerData/
 installer/payload/
 installer/payload-legacy/
 installer/release/

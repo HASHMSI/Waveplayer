@@ -23,12 +23,12 @@ internal sealed class TrayIcon : IDisposable
     {
         _menu = menu; _refresh = refresh; _restore = restore;
         // A hidden top-level window receives Explorer's TaskbarCreated broadcast.
-        _source = new HwndSource(new HwndSourceParameters("Waveplayer tray messages")
+        _source = new HwndSource(new HwndSourceParameters("WavePlayer tray messages")
         { Width = 0, Height = 0, WindowStyle = 0 });
         _source.AddHook(Hook);
         try
         {
-            using var stream = Application.GetResourceStream(new Uri("pack://application:,,,/Waveplayer;component/Assets/Waveplayer.ico"))!.Stream;
+            using var stream = Application.GetResourceStream(new Uri("pack://application:,,,/WavePlayer;component/Assets/WavePlayer.ico"))!.Stream;
             using var reader = new BinaryReader(stream);
             reader.ReadUInt16(); reader.ReadUInt16(); int count = reader.ReadUInt16();
             var entries = new List<(int Width, uint Bytes, uint Offset)>();
@@ -51,7 +51,7 @@ internal sealed class TrayIcon : IDisposable
     {
         Size = (uint)Marshal.SizeOf<NotifyData>(), Window = _source.Handle, Id = 1,
         Flags = 1 | 2 | 4 | 0x80, Message = Callback, Icon = _icon,
-        Tip = "Waveplayer · click for controls", Info = "", InfoTitle = "", Version = 4
+        Tip = "WavePlayer · click for controls", Info = "", InfoTitle = "", Version = 4
     };
 
     private void Add()

@@ -46,7 +46,7 @@ public partial class MainWindow
             var item = new MenuItem { Header = title, Icon = new TextBlock { Text = icon, Foreground = Brushes.HotPink } };
             item.Click += (_, _) => action(); menu.Items.Add(item); return item;
         }
-        var heading = new MenuItem { Header = "WAVEPLAYER", IsEnabled = false, Foreground = Brushes.HotPink };
+        var heading = new MenuItem { Header = "WavePlayer", IsEnabled = false, Foreground = Brushes.HotPink };
         menu.Items.Add(heading);
         var show = Item("Hide widget", "◈", () => { if (IsVisible) Hide(); else RestoreFromTray(); });
         var play = Item("Play", "▶", () => PlayPauseButton_Click(this, new RoutedEventArgs()));
@@ -63,12 +63,12 @@ public partial class MainWindow
         var pin = Item("Pin widget", "◇", () => PinButton_Click(this, new RoutedEventArgs()));
         Item("Settings", "⚙", () => { RestoreFromTray(); if (IsEnabled) SettingsButton_Click(this, new RoutedEventArgs()); });
         menu.Items.Add(new Separator { Background = new SolidColorBrush(Color.FromRgb(60, 43, 65)), Height = 1, Margin = new Thickness(10, 5, 10, 5) });
-        Item("Exit Waveplayer", "×", ExitApplication);
+        Item("Exit WavePlayer", "×", ExitApplication);
         try
         {
             _tray = new TrayIcon(menu, () =>
             {
-                heading.Header = _localTrack is null ? "WAVEPLAYER" : "WAVEPLAYER · " + TrackTitle.Text[..Math.Min(35, TrackTitle.Text.Length)];
+                heading.Header = _localTrack is null ? "WavePlayer" : "WavePlayer · " + TrackTitle.Text[..Math.Min(35, TrackTitle.Text.Length)];
                 show.Header = IsVisible ? "Hide widget" : "Show widget";
                 play.Header = _waveOut?.PlaybackState == PlaybackState.Playing ? "Pause" : "Play";
                 remix.Header = "Automix · " + (_settings.RemixDemoEnabled ? "On" : "Off");

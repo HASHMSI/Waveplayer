@@ -2,11 +2,11 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch Waveplayer",
+      "name": "Launch WavePlayer",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "Build Synthwave Now Playing",
-      "program": "${workspaceFolder}\\..\\..\\.build\\SynthwaveNowPlaying\\bin\\Debug\\net10.0-windows10.0.19041.0\\Waveplayer.dll",
+      "program": "${workspaceFolder}\\..\\..\\.build\\SynthwaveNowPlaying\\bin\\Debug\\net10.0-windows10.0.19041.0\\WavePlayer.dll",
       "cwd": "${workspaceFolder}",
       "console": "internalConsole",
       "stopAtEntry": false,

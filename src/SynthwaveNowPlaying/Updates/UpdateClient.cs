@@ -13,7 +13,7 @@ internal sealed record ReleasePackage(Version Version, string Tag, UpdateAsset? 
 
 internal static class UpdateClient
 {
-    private const string LatestRelease = "https://api.github.com/repos/HASHMSI/Waveplayer/releases/latest";
+    private const string LatestRelease = "https://api.github.com/repos/HASHMSI/WavePlayer/releases/latest";
     private static readonly HttpClient Client = CreateClient();
     internal static Version InstalledVersion
     {
@@ -27,7 +27,7 @@ internal static class UpdateClient
     private static HttpClient CreateClient()
     {
         var client = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("Waveplayer-Updater/1.0");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("WavePlayer-Updater/1.0");
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
         return client;
     }
@@ -51,14 +51,14 @@ internal static class UpdateClient
                 var digest = asset.TryGetProperty("digest", out var value) ? value.GetString() : null;
                 if (address is null || digest is null || !digest.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase)) return null;
                 if (!Uri.TryCreate(address, UriKind.Absolute, out var url) || url.Scheme != Uri.UriSchemeHttps ||
-                    url.Host != "github.com" || !url.AbsolutePath.StartsWith($"/HASHMSI/Waveplayer/releases/download/{tag}/", StringComparison.Ordinal)) return null;
+                    url.Host != "github.com" || !url.AbsolutePath.StartsWith($"/HASHMSI/WavePlayer/releases/download/{tag}/", StringComparison.Ordinal)) return null;
                 return new UpdateAsset(url, asset.GetProperty("size").GetInt64(), digest[7..]);
             }
             return null;
         }
-        var files = FindAsset("WaveplayerFiles.zip");
-        var patch = FindAsset("WaveplayerPatch.zip");
-        var legacy = FindAsset("WaveplayerPortable.zip");
+        var files = FindAsset("WavePlayerFiles.zip");
+        var patch = FindAsset("WavePlayerPatch.zip");
+        var legacy = FindAsset("WavePlayerPortable.zip");
         return files is null && legacy is null ? null : new ReleasePackage(version, tag, files, patch, legacy);
     }
 
@@ -66,7 +66,7 @@ internal static class UpdateClient
     {
         // A VS Code build has no install manifest and must never update itself.
         var installDirectory = Path.GetDirectoryName(Environment.ProcessPath);
-        if (installDirectory is null || (File.Exists(Path.Combine(installDirectory, "Waveplayer.dll")) &&
+        if (installDirectory is null || (File.Exists(Path.Combine(installDirectory, "WavePlayer.dll")) &&
             !File.Exists(Path.Combine(installDirectory, UpdatePackage.ManifestName)))) return;
         string? helperDirectory = null;
         try
@@ -85,10 +85,10 @@ internal static class UpdateClient
             }
             var installedExe = Environment.ProcessPath;
             if (installedExe is null || !File.Exists(installedExe)) return;
-            helperDirectory = Path.Combine(Path.GetTempPath(), "WaveplayerUpdater", Guid.NewGuid().ToString("N"));
+            helperDirectory = Path.Combine(Path.GetTempPath(), "WavePlayerUpdater", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(helperDirectory);
-            // A multi-file apphost loads Waveplayer.dll beside Waveplayer.exe.
-            var helperExe = Path.Combine(helperDirectory, "Waveplayer.exe");
+            // A multi-file apphost loads WavePlayer.dll beside WavePlayer.exe.
+            var helperExe = Path.Combine(helperDirectory, "WavePlayer.exe");
             await Task.Run(() =>
             {
                 var installedManifest = UpdatePackage.ReadInstalled(installDirectory);
@@ -127,7 +127,7 @@ internal static class UpdateClient
     internal static async Task CleanupStaleHelpersAsync()
     {
         await Task.Delay(2000);
-        var root = Path.Combine(Path.GetTempPath(), "WaveplayerUpdater");
+        var root = Path.Combine(Path.GetTempPath(), "WavePlayerUpdater");
         if (!Directory.Exists(root)) return;
         foreach (var folder in Directory.EnumerateDirectories(root))
         {
@@ -141,7 +141,7 @@ internal static class UpdateClient
 
     internal static async Task CleanupHelperAsync(string path)
     {
-        var root = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "WaveplayerUpdater"));
+        var root = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "WavePlayerUpdater"));
         var candidate = Path.GetFullPath(path);
         if (!string.Equals(Path.GetDirectoryName(candidate), root, StringComparison.OrdinalIgnoreCase) ||
             !Guid.TryParseExact(Path.GetFileName(candidate), "N", out _)) return;

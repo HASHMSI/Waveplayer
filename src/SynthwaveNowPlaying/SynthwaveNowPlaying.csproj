@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <AssemblyName>Waveplayer</AssemblyName>
+    <AssemblyName>WavePlayer</AssemblyName>
     <Version>1.2.0</Version>
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <Nullable>enable</Nullable>
@@ -9,7 +9,7 @@
     <UseWPF>true</UseWPF>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>Assets\Waveplayer.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\WavePlayer.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Resource Include="$(ApplicationIcon)" />

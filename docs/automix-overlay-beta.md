@@ -23,7 +23,7 @@ Tray menu:
 - **Automix popup · On/Off** persists the visibility preference.
 - **Preview Automix popup** runs a seven-second silent animation followed
   by the completion state and dismissal. It does not play, seek or reorder music.
-- `Waveplayer.exe --preview-automix` triggers the same preview, including through
+- `WavePlayer.exe --preview-automix` triggers the same preview, including through
   the running player's single-instance signal.
 
 Closing/cancelling a transition dismisses its popup. Preview/animation timers

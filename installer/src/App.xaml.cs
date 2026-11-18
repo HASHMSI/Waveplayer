@@ -1,3 +1,3 @@
 using System.Windows;
-namespace WaveplayerSetup;
+namespace WavePlayerSetup;
 public partial class App : Application { }

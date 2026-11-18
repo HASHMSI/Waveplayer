@@ -7,7 +7,7 @@ using System.Windows.Shapes;
 using Path = System.IO.Path;
 using SynthwaveNowPlaying;
 
-namespace WaveplayerSetup;
+namespace WavePlayerSetup;
 
 public partial class MainWindow
 {
@@ -31,9 +31,9 @@ public partial class MainWindow
     private void PlayDemo(string resourceName, bool spectrum = false)
     {
         StopDemo();
-        using var source = typeof(MainWindow).Assembly.GetManifestResourceStream("WaveplayerSetup.Assets." + resourceName)
+        using var source = typeof(MainWindow).Assembly.GetManifestResourceStream("WavePlayerSetup.Assets." + resourceName)
             ?? throw new InvalidOperationException("Demo audio is missing.");
-        _demoFile = Path.Combine(Path.GetTempPath(), "Waveplayer-demo-" + Guid.NewGuid().ToString("N") + ".mp3");
+        _demoFile = Path.Combine(Path.GetTempPath(), "WavePlayer-demo-" + Guid.NewGuid().ToString("N") + ".mp3");
         using (var destination = File.Create(_demoFile)) source.CopyTo(destination);
         _demoPlayer.Open(new Uri(_demoFile));
         _demoPlayer.Volume = .55;
@@ -90,7 +90,7 @@ public partial class MainWindow
         panel.Children.Add(Copy("Audio examples illustrate longer and shorter fades with Revolve → Don't Sleep Yet.", 10));
         _spectrumSection = Copy("LIVE SPECTRUM", 11);
         panel.Children.Add(_spectrumSection);
-        using (var stream = typeof(MainWindow).Assembly.GetManifestResourceStream("WaveplayerSetup.Assets.spectrum-demo.bin")!)
+        using (var stream = typeof(MainWindow).Assembly.GetManifestResourceStream("WavePlayerSetup.Assets.spectrum-demo.bin")!)
         using (var reader = new BinaryReader(stream))
         {
             _spectrumFrames = new float[(int)(stream.Length / sizeof(float))];
@@ -123,7 +123,7 @@ public partial class MainWindow
         grid.Children.Add(cover);
         var body = new StackPanel();
         Grid.SetColumn(body, 1);
-        body.Children.Add(new TextBlock { Text = "WAVEPLAYER  •  NOW PLAYING", FontSize = 10, FontWeight = FontWeights.Bold });
+        body.Children.Add(new TextBlock { Text = "WavePlayer  •  NOW PLAYING", FontSize = 10, FontWeight = FontWeights.Bold });
         var bars = new StackPanel { Orientation = Orientation.Horizontal, Height = 30, VerticalAlignment = VerticalAlignment.Bottom };
         for (int i = 0; i < 30; i++)
         {

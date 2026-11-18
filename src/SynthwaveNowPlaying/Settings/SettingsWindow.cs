@@ -63,7 +63,7 @@ internal sealed partial class SettingsWindow : Window
         _scanTracks = scanTracks;
         _analysisCache = analysisCache;
         _onAnalysisReady = onAnalysisReady;
-        Title = "Waveplayer · Control Deck";
+        Title = "WavePlayer · Control Deck";
         Width = Math.Min(820, SystemParameters.WorkArea.Width - 32);
         Height = Math.Min(680, SystemParameters.WorkArea.Height - 32);
         MinWidth = Math.Min(700, Width);
@@ -130,7 +130,7 @@ internal sealed partial class SettingsWindow : Window
         var titles = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         titles.Children.Add(new TextBlock
         {
-            Text = "WAVEPLAYER  /  CONTROL DECK",
+            Text = "WavePlayer  /  CONTROL DECK",
             FontSize = 8,
             FontWeight = FontWeights.SemiBold,
             Foreground = Cyan,

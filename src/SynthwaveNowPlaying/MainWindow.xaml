@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
         xmlns:local="clr-namespace:SynthwaveNowPlaying"
-        Title="Waveplayer · Now Playing" Width="410" Height="153" MinWidth="390" MinHeight="146"
-        Icon="Assets/Waveplayer.ico" WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        Title="WavePlayer · Now Playing" Width="410" Height="153" MinWidth="390" MinHeight="146"
+        Icon="Assets/WavePlayer.ico" WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ResizeMode="CanResizeWithGrip" Topmost="True" ShowInTaskbar="True"
         WindowStartupLocation="Manual" UseLayoutRounding="True" SnapsToDevicePixels="True" FontFamily="Bahnschrift">
     <Window.Resources>
@@ -262,7 +262,7 @@
                 <DockPanel Grid.Row="0" LastChildFill="False">
                     <StackPanel x:Name="BrandBlock" Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
                         <Ellipse Width="7" Height="7" Fill="{DynamicResource AlbumPrimaryBrush}" Margin="0,0,9,0"/>
-                        <TextBlock Text="WAVEPLAYER" Foreground="{StaticResource Ink}" FontSize="8" FontWeight="Bold"/>
+                        <TextBlock Text="WavePlayer" Foreground="{StaticResource Ink}" FontSize="8" FontWeight="Bold"/>
                         <TextBlock Text="  •  STEREO FM 84" Foreground="#FFCE84FF" FontSize="7" VerticalAlignment="Center"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">

@@ -25,4 +25,4 @@ New-Item -ItemType Directory -Path $output -Force | Out-Null
     -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
     -p:PublishTrimmed=false -o $output
 if ($LASTEXITCODE -ne 0) { throw 'Setup publish failed.' }
-Write-Host "Setup created at $output/WaveplayerSetup.exe"
+Write-Host "Setup created at $output/WavePlayerSetup.exe"

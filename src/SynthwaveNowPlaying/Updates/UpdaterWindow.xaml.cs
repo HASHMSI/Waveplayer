@@ -43,8 +43,8 @@ public partial class UpdaterWindow : Window
             SetStage("Finding the latest release", "Connecting to GitHub Releases", 0);
             var release = await UpdateClient.FetchLatestAsync()
                 ?? throw new InvalidOperationException("The release does not include a verified update package.");
-            if (Path.GetFileName(_installedExe) != "Waveplayer.exe" || !File.Exists(_installedExe))
-                throw new InvalidOperationException("The installed Waveplayer executable was not found.");
+            if (Path.GetFileName(_installedExe) != "WavePlayer.exe" || !File.Exists(_installedExe))
+                throw new InvalidOperationException("The installed WavePlayer executable was not found.");
             var directory = Path.GetDirectoryName(_installedExe)!;
             var layoutMigration = release.Version == CurrentTargetVersion() && release.Files is not null &&
                 UpdatePackage.ReadInstalled(directory) is null;
@@ -68,22 +68,22 @@ public partial class UpdaterWindow : Window
                     catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Patch failed, downloading full package: {ex}"); }
                 if (manifest is null)
                     (stage, manifest) = await PrepareFilesAsync(full, work, directory, release.Version, false);
-                SetStage("Installing Waveplayer", "Replacing verified files while your settings remain intact", 91);
+                SetStage("Installing WavePlayer", "Replacing verified files while your settings remain intact", 91);
                 await WaitForPreviousProcessAsync();
                 InstallFiles(stage!, manifest);
             }
             else if (release.Legacy is { } legacy)
             {
-                var archivePath = Path.Combine(work, "WaveplayerPortable.zip");
+                var archivePath = Path.Combine(work, "WavePlayerPortable.zip");
                 await DownloadPackageAsync(legacy, archivePath);
                 SetStage("Preparing your new version", "Download verified · unpacking files", 82);
                 var stage = Path.Combine(work, "legacy-stage");
                 Directory.CreateDirectory(stage);
-                var stagedExe = Path.Combine(stage, "Waveplayer.exe");
+                var stagedExe = Path.Combine(stage, "WavePlayer.exe");
                 var stagedClassic = Path.Combine(stage, "SynthwaveNowPlaying.dll");
                 using (var archive = ZipFile.OpenRead(archivePath))
                 {
-                    var player = archive.GetEntry("Waveplayer.exe") ?? throw new InvalidDataException("Player missing from update package.");
+                    var player = archive.GetEntry("WavePlayer.exe") ?? throw new InvalidDataException("Player missing from update package.");
                     var classic = archive.GetEntry("Classic/SynthwaveNowPlaying.dll") ?? throw new InvalidDataException("Visualizer missing from update package.");
                     player.ExtractToFile(stagedExe, overwrite: true);
                     classic.ExtractToFile(stagedClassic, overwrite: true);
@@ -92,12 +92,12 @@ public partial class UpdaterWindow : Window
                 var packagedVersion = new Version(fileVersion.FileMajorPart, fileVersion.FileMinorPart, fileVersion.FileBuildPart);
                 if (packagedVersion != release.Version)
                     throw new InvalidDataException("Package version does not match the release.");
-                SetStage("Installing Waveplayer", "Replacing the player while your settings remain intact", 91);
+                SetStage("Installing WavePlayer", "Replacing the player while your settings remain intact", 91);
                 await WaitForPreviousProcessAsync();
                 InstallPackage(stagedExe, stagedClassic);
             }
             else throw new InvalidDataException("The release has no usable package.");
-            SetStage("Update complete", "Opening Waveplayer", 100);
+            SetStage("Update complete", "Opening WavePlayer", 100);
             await Task.Delay(500);
             Close();
         }
@@ -115,7 +115,7 @@ public partial class UpdaterWindow : Window
     private async Task<(string Stage, UpdateManifest Manifest)> PrepareFilesAsync(UpdateAsset asset,
         string work, string installedDirectory, Version releaseVersion, bool patch)
     {
-        var archivePath = Path.Combine(work, patch ? "WaveplayerPatch.zip" : "WaveplayerFiles.zip");
+        var archivePath = Path.Combine(work, patch ? "WavePlayerPatch.zip" : "WavePlayerFiles.zip");
         await DownloadPackageAsync(asset, archivePath);
         SetStage("Preparing your new version", "Verifying every player file", 82);
         var stage = Path.Combine(work, "stage-" + Guid.NewGuid().ToString("N"));
@@ -128,7 +128,7 @@ public partial class UpdaterWindow : Window
     {
         SetStage("Downloading the update", "Secure package from GitHub Releases", 3);
         using var client = new HttpClient { Timeout = TimeSpan.FromMinutes(30) };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("Waveplayer-Updater/1.0");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("WavePlayer-Updater/1.0");
         using var response = await client.GetAsync(asset.DownloadUrl, HttpCompletionOption.ResponseHeadersRead);
         response.EnsureSuccessStatusCode();
         await using var source = await response.Content.ReadAsStreamAsync();
@@ -178,9 +178,9 @@ public partial class UpdaterWindow : Window
         var directory = Path.GetDirectoryName(_installedExe)!;
         var oldManifest = UpdatePackage.ReadInstalled(directory);
         var oldPaths = oldManifest?.Files.Select(file => file.Path).ToList()
-            ?? ["Waveplayer.exe", "Classic/SynthwaveNowPlaying.dll"];
+            ?? ["WavePlayer.exe", "Classic/SynthwaveNowPlaying.dll"];
         if (oldManifest is not null) oldPaths.Add(UpdatePackage.ManifestName);
-        var backup = Path.Combine(directory, ".waveplayer-backup-" + Guid.NewGuid().ToString("N"));
+        var backup = Path.Combine(directory, ".WavePlayer-backup-" + Guid.NewGuid().ToString("N"));
         var moved = new List<string>();
         var copied = new List<string>();
         Directory.CreateDirectory(backup);

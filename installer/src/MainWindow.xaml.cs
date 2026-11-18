@@ -10,14 +10,14 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 
-namespace WaveplayerSetup;
+namespace WavePlayerSetup;
 
 public partial class MainWindow : Window
 {
     private static readonly string[] StageNames = ["WELCOME", "DESTINATION", "INSTALLING", "COLORWAY", "MUSIC FOLDERS", "PLAYBACK", "READY"];
     private static readonly string[] Titles = ["Make room for the night", "Choose an install location", "Building your listening space", "Make it yours", "Find your music", "Set the rhythm", "Ready to play"];
     private int _stage;
-    private string _destination = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Waveplayer");
+    private string _destination = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "WavePlayer");
     private readonly List<string> _folders = [];
     private string _theme = "Neon Grid";
     private string _primary = "#FF47B8";
@@ -104,11 +104,11 @@ public partial class MainWindow : Window
     private async void Next_Click(object sender, RoutedEventArgs e)
     {
         if (_installing) return;
-        if (_stage == 6) { Process.Start(new ProcessStartInfo(Path.Combine(_destination, "Waveplayer.exe")) { UseShellExecute = true }); Close(); return; }
+        if (_stage == 6) { Process.Start(new ProcessStartInfo(Path.Combine(_destination, "WavePlayer.exe")) { UseShellExecute = true }); Close(); return; }
         if (_stage == 1)
         {
             _destination = _destinationBox?.Text.Trim() ?? _destination;
-            if (string.IsNullOrWhiteSpace(_destination)) { MessageBox.Show(this, "Choose an install folder.", "Waveplayer"); return; }
+            if (string.IsNullOrWhiteSpace(_destination)) { MessageBox.Show(this, "Choose an install folder.", "WavePlayer"); return; }
             _stage = 2;
             RenderStage();
             await InstallAsync();
@@ -165,7 +165,7 @@ public partial class MainWindow : Window
         _spectrumSection = null;
         BeginAnimation(AnimatedScrollProperty, null);
         PageScroll.ScrollToTop();
-        Eyebrow.Text = "WAVEPLAYER  /  " + StageNames[_stage];
+        Eyebrow.Text = "WavePlayer  /  " + StageNames[_stage];
         Heading.Text = Titles[_stage];
         StepCounter.Text = $"{_stage + 1:00}  /  07     {StageNames[_stage]}";
         FooterNote.Text = _stage < 3 ? "Files stay on this PC" : "Your choices are saved for the first launch";
@@ -220,7 +220,7 @@ public partial class MainWindow : Window
     {
         var panel = Stack();
         panel.Children.Add(Copy("A compact player with a live spectrum, album-driven colors and adaptive transitions.", 15));
-        panel.Children.Add(Panel(Copy("THIS SETUP WILL\n\n• Install Waveplayer for this Windows account\n• Let you choose the install folder\n• Configure the colors, music folders and playback\n• Create a Start menu shortcut", 12)));
+        panel.Children.Add(Panel(Copy("THIS SETUP WILL\n\n• Install WavePlayer for this Windows account\n• Let you choose the install folder\n• Configure the colors, music folders and playback\n• Create a Start menu shortcut", 12)));
         panel.Children.Add(Copy("Select Next to choose where the player should live.", 11));
         return panel;
     }
@@ -269,7 +269,7 @@ public partial class MainWindow : Window
     private UIElement Colorway()
     {
         var panel = Stack();
-        panel.Children.Add(Copy("Choose a starting colorway. You can refine it later inside Waveplayer.", 12));
+        panel.Children.Add(Copy("Choose a starting colorway. You can refine it later inside WavePlayer.", 12));
         var choices = new StackPanel { Orientation = Orientation.Horizontal };
         foreach (var (name, first, second) in new[] {
             ("Neon Grid", "#FF47B8", "#45D8FF"), ("Violet Dusk", "#D95BEF", "#FFB164"),
@@ -313,7 +313,7 @@ public partial class MainWindow : Window
     private UIElement Folders()
     {
         var panel = Stack();
-        panel.Children.Add(Copy("Add the folders that contain your songs. Waveplayer will scan their subfolders and playlists too.", 12));
+        panel.Children.Add(Copy("Add the folders that contain your songs. WavePlayer will scan their subfolders and playlists too.", 12));
         _folderList = new StackPanel();
         panel.Children.Add(_folderList);
         foreach (var folder in _folders.ToArray()) AddFolderLine(folder);
@@ -347,7 +347,7 @@ public partial class MainWindow : Window
     private UIElement Finish()
     {
         var panel = Stack();
-        panel.Children.Add(Panel(Copy("✓  Waveplayer is installed and ready to launch.\n\nYour colors, music folders and playback choices are saved.", 15)));
+        panel.Children.Add(Panel(Copy("✓  WavePlayer is installed and ready to launch.\n\nYour colors, music folders and playback choices are saved.", 15)));
         panel.Children.Add(Copy(_destination, 11));
         panel.Children.Add(new TextBlock
         {
@@ -362,7 +362,7 @@ public partial class MainWindow : Window
 
     private string? ChooseFolder(string initial)
     {
-        var dialog = new OpenFolderDialog { Title = "Choose a folder for Waveplayer", InitialDirectory = Directory.Exists(initial) ? initial : Environment.GetFolderPath(Environment.SpecialFolder.MyMusic) };
+        var dialog = new OpenFolderDialog { Title = "Choose a folder for WavePlayer", InitialDirectory = Directory.Exists(initial) ? initial : Environment.GetFolderPath(Environment.SpecialFolder.MyMusic) };
         return dialog.ShowDialog(this) == true ? dialog.FolderName : null;
     }
 
@@ -396,7 +396,7 @@ public partial class MainWindow : Window
     {
         var full = Path.GetFullPath(destination);
         Directory.CreateDirectory(full);
-        using var resource = typeof(MainWindow).Assembly.GetManifestResourceStream("WaveplayerSetup.payload.zip")
+        using var resource = typeof(MainWindow).Assembly.GetManifestResourceStream("WavePlayerSetup.payload.zip")
             ?? throw new InvalidOperationException("Player package is missing.");
         using var archive = new ZipArchive(resource);
         var entries = archive.Entries.Where(entry => entry.Name.Length > 0).ToArray();
@@ -427,14 +427,14 @@ public partial class MainWindow : Window
         Directory.CreateDirectory(menu);
         try
         {
-            CreateShortcut(Path.Combine(menu, "Waveplayer.lnk"), full);
+            CreateShortcut(Path.Combine(menu, "WavePlayer.lnk"), full);
         }
         catch { }
         if (desktopShortcut)
         {
             var desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
             if (string.IsNullOrWhiteSpace(desktop)) throw new IOException("Windows could not locate the desktop folder.");
-            CreateShortcut(Path.Combine(desktop, "Waveplayer.lnk"), full);
+            CreateShortcut(Path.Combine(desktop, "WavePlayer.lnk"), full);
         }
     }
 
@@ -442,9 +442,9 @@ public partial class MainWindow : Window
     {
         dynamic shell = Activator.CreateInstance(Type.GetTypeFromProgID("WScript.Shell")!)!;
         dynamic shortcut = shell.CreateShortcut(shortcutPath);
-        shortcut.TargetPath = Path.Combine(destination, "Waveplayer.exe");
+        shortcut.TargetPath = Path.Combine(destination, "WavePlayer.exe");
         shortcut.WorkingDirectory = destination;
-        shortcut.Description = "Waveplayer music player";
+        shortcut.Description = "WavePlayer music player";
         shortcut.Save();
     }
 

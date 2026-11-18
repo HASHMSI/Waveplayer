@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 // Generated tonal progressions are independent ground truth. No library songs
 // or tags are used to set the expected answer; real recordings are reported separately.
-var directory = Path.Combine(Path.GetTempPath(), "WaveplayerKeyChecks-" + Guid.NewGuid().ToString("N"));
+var directory = Path.Combine(Path.GetTempPath(), "WavePlayerKeyChecks-" + Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(directory);
 int passed = 0, total = 0;
 var clock = Stopwatch.StartNew();
@@ -46,7 +46,7 @@ foreach (var file in args)
     Console.WriteLine($"{Path.GetFileName(file)}: {result.Display}; candidate={result.Name}; evidence={result.Confidence:F2}; {clock.Elapsed.TotalSeconds:F2}s");
 }
 // The directory is generated above, never a caller-supplied path.
-if (!Path.GetFileName(directory).StartsWith("WaveplayerKeyChecks-", StringComparison.Ordinal) ||
+if (!Path.GetFileName(directory).StartsWith("WavePlayerKeyChecks-", StringComparison.Ordinal) ||
     !string.Equals(Path.GetDirectoryName(Path.GetFullPath(directory))!.TrimEnd(Path.DirectorySeparatorChar),
         Path.GetFullPath(Path.GetTempPath()).TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase))
     throw new InvalidOperationException("Unexpected fixture directory");

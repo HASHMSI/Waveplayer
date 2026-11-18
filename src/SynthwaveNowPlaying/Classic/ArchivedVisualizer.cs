@@ -12,10 +12,10 @@ internal sealed class ArchivedVisualizer
 {
     private static readonly Lazy<Assembly> Assembly = new(() =>
 #if SETUP
-        new AssemblyLoadContext("Waveplayer Classic").LoadFromStream(
+        new AssemblyLoadContext("WavePlayer Classic").LoadFromStream(
             typeof(ArchivedVisualizer).Assembly.GetManifestResourceStream("Setup.Classic.dll")!));
 #else
-        new AssemblyLoadContext("Waveplayer Classic").LoadFromAssemblyPath(
+        new AssemblyLoadContext("WavePlayer Classic").LoadFromAssemblyPath(
             Path.Combine(AppContext.BaseDirectory, "Classic", "SynthwaveNowPlaying.dll")));
 #endif
 

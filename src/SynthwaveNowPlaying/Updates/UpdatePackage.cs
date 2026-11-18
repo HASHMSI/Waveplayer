@@ -12,7 +12,7 @@ internal sealed record UpdateManifest(int Format, string Version, string? BaseVe
 /// <summary>Stages and verifies a full or file-level update before touching the installation.</summary>
 internal static class UpdatePackage
 {
-    internal const string ManifestName = "waveplayer-update.json";
+    internal const string ManifestName = "WavePlayer-update.json";
     private static readonly JsonSerializerOptions Json = new() { PropertyNameCaseInsensitive = true };
 
     internal static UpdateManifest? ReadInstalled(string directory)
@@ -103,7 +103,7 @@ internal static class UpdatePackage
                 throw new InvalidDataException("Invalid update file entry.");
         }
         foreach (var path in manifest.Changed ?? []) ValidatePath(path);
-        if (!unique.Contains("Waveplayer.exe") || !unique.Contains("Waveplayer.dll"))
+        if (!unique.Contains("WavePlayer.exe") || !unique.Contains("WavePlayer.dll"))
             throw new InvalidDataException("The player files are incomplete.");
     }
 
