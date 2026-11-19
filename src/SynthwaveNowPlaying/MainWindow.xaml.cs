@@ -69,7 +69,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        if (LabData.Isolated) Title = "WavePlayer · AutoDJ Lab";
+        if (LabData.Isolated) Title = "WavePlayer · Adaptive v2 Preview";
         RadioChannelList.ItemsSource = RadioStations;
         RestoreWidgetSize();
         DockToDesktopCorner();

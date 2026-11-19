@@ -77,22 +77,28 @@ internal static class TransitionPlannerV2
                         beatSeek + j * newBeat.PeriodSeconds, true);
         }
         if (!double.IsFinite(bestScore)) return legacy;
-        // V2 uses a deliberate filter/echo handoff on normal-length transitions,
-        // even when a trustworthy beat grid is unavailable. Very short clips
-        // keep the plain fade; no beat sync is claimed for an unaligned plan.
-        if (best.FadeSeconds >= 1.5)
-            best = best with { Effect = best.FadeSeconds >= 2 ? EndingEffect.NeonRoll : EndingEffect.SweepEcho,
-                EchoDelay = oldBeat.IsReliable ? Math.Clamp(oldBeat.PeriodSeconds / 2, .14, .38) : .24 };
-
+        best = TransitionPlannerLab.Refine(duration, current, next, best);
+        if (best.FadeSeconds < .45) return best;
         var oldVoice = Average(a.Outro, Math.Max(best.StartSeconds, end - 2), end, bin => bin.Voice);
         var newVoice = Average(b.Intro, best.NextSeekSeconds,
             best.NextSeekSeconds + Math.Min(2, best.FadeSeconds), bin => bin.Voice);
-        if (oldVoice > .35 || newVoice > .4) return best;
-        // Reserve the dramatic cut for a real shared beat with distinct attacks.
+        // Avoid a roll or echo on top of a vocal entrance or busy attacks.
+        // A synchronized instrumental pair can still take the deliberate drop.
         if (best.BeatAligned && best.FadeSeconds >= 1.2 &&
             strongEnding > .45 && entrance > .45 && oldVoice < .25 && newVoice < .25)
             return best with { Effect = EndingEffect.DropCut };
-        if (best.Effect is EndingEffect.SweepEcho or EndingEffect.NeonRoll) return best;
+        if (oldVoice > .35 || newVoice > .4 || strongEnding > .55 || entrance > .58)
+            return best;
+        if (a.NaturalTail && quietEnding < .2)
+            return best with { Effect = EndingEffect.NaturalTail };
+        var delay = oldBeat.IsReliable ? Math.Clamp(oldBeat.PeriodSeconds / 2, .14, .38) : .24;
+        // A beat roll needs a trustworthy, shared bar. An uncertain grid may
+        // still receive a gentle sweep, which does not imply beat alignment.
+        if (best.BeatAligned && best.FadeSeconds >= 2 &&
+            strongEnding > .24 && entrance > .2)
+            return best with { Effect = EndingEffect.NeonRoll, EchoDelay = delay };
+        if (best.FadeSeconds >= 1.5 && quietEnding < .35 && strongEnding < .45)
+            return best with { Effect = EndingEffect.SweepEcho, EchoDelay = delay };
         if (oldBeat.IsReliable && a.LastHit >= best.StartSeconds &&
             a.LastHit > end - oldBeat.PeriodSeconds * 1.4 &&
             Math.Abs(a.LastHit - oldBeat.Nearest(a.LastHit)) < .09 && best.FadeSeconds >= 1)

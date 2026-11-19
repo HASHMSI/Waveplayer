@@ -49,7 +49,7 @@ public partial class MainWindow : Window
         var timing = _settings.AutomixTiming switch
         {
             AutomixTiming.AdaptiveV2 => "Adaptive (v2)",
-            AutomixTiming.AutoDjLab => "AutoDJ Lab",
+            AutomixTiming.AutoDjLab => "Adaptive (v2)",
             _ => _settings.AutomixTiming.ToString()
         };
         RemixDemoButton.ToolTip = $"Automix {(_settings.RemixDemoEnabled ? "on" : "off")} · {timing} timing";

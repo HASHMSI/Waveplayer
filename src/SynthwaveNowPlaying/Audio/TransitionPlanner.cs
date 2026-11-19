@@ -14,7 +14,8 @@ internal static class TransitionPlanner
     {
         if (timing == AutomixTiming.Classic) return PlanClassic(durationSeconds, current, next);
         if (timing == AutomixTiming.AdaptiveV2) return TransitionPlannerV2.Plan(durationSeconds, current, next);
-        if (timing == AutomixTiming.AutoDjLab) return TransitionPlannerLab.Plan(durationSeconds, current, next);
+        // Preserve the old experiment value in existing settings files.
+        if (timing == AutomixTiming.AutoDjLab) return TransitionPlannerV2.Plan(durationSeconds, current, next);
         var activeEnd = Math.Max(0, durationSeconds - current.OutroSilence - .1);
         if (current.Features is { NaturalTail: true } tail)
             activeEnd = Math.Min(durationSeconds, Math.Max(activeEnd, tail.TailEnd));

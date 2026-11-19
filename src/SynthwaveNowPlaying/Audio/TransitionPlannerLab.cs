@@ -7,9 +7,9 @@ namespace SynthwaveNowPlaying;
 /// </summary>
 internal static class TransitionPlannerLab
 {
-    public static TransitionPlan Plan(double duration, TransitionProfile current, TransitionProfile next)
+    public static TransitionPlan Refine(double duration, TransitionProfile current, TransitionProfile next,
+        TransitionPlan baseline)
     {
-        var baseline = TransitionPlannerV2.Plan(duration, current, next);
         var end = Math.Clamp(duration - current.OutroSilence - .1, 0, duration);
         if (current.Features is { NaturalTail: true } tail)
             end = Math.Min(duration, Math.Max(end, tail.TailEnd));
@@ -75,10 +75,8 @@ internal static class TransitionPlannerLab
                 + .2 * mismatch * length / old.PeriodSeconds;
             if (score >= bestScore) continue;
             bestScore = score;
-            var effect = conflict / Math.Max(1, count) > .22 ? EndingEffect.Clean
-                : a.NaturalTail ? EndingEffect.NaturalTail
-                : bars >= 2 ? EndingEffect.Filter : EndingEffect.Clean;
-            best = new TransitionPlan(start, seek, length, true, effect);
+            // The V2 planner chooses an effect after timing is settled.
+            best = new TransitionPlan(start, seek, length, true);
         }
         return best ?? SafeFallback(baseline, end, intro, next, 4);
     }

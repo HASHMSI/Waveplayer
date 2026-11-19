@@ -41,7 +41,13 @@ internal sealed class AppSettings
     private static string FilePath => Path.Combine(LabData.DataDirectory, "settings.json");
     public static AppSettings Load()
     {
-        try { return File.Exists(FilePath) ? JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath)) ?? new() : new(); }
+        try
+        {
+            var settings = File.Exists(FilePath) ? JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath)) ?? new() : new();
+            if (settings.AutomixTiming == AutomixTiming.AutoDjLab)
+                settings.AutomixTiming = AutomixTiming.AdaptiveV2;
+            return settings;
+        }
         catch { return new(); }
     }
     public void Save()

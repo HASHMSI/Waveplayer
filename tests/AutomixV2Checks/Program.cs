@@ -27,7 +27,7 @@ var next = Synthetic(true) with
 var soft = TransitionPlanner.Plan(180, Synthetic(true), next, AutomixTiming.AdaptiveV2);
 var hard = TransitionPlanner.Plan(180, Synthetic(false), next, AutomixTiming.AdaptiveV2);
 Ensure(soft.FadeSeconds > hard.FadeSeconds, "Gentle outro should allow a longer mix");
-Ensure(soft.Effect == EndingEffect.NeonRoll, "Normal-length v2 transition should choose the audible roll");
+Ensure(soft.Effect == EndingEffect.SweepEcho, "Unaligned gentle outro should use a subtle sweep");
 Ensure(hard.Effect == EndingEffect.Clean, "Percussive outro should remain clean");
 Ensure(soft.StartSeconds >= 0 && soft.StartSeconds + soft.FadeSeconds <= 180, "Mix exceeds outgoing track");
 var classic = TransitionPlanner.Plan(180, Synthetic(true), next, AutomixTiming.Classic);
@@ -53,16 +53,16 @@ var labIn = next with
     IntroBeat = tempo,
     Features = next.Features! with { Intro = next.Features!.Intro with { BarAnchor = 0 } }
 };
-var labAligned = TransitionPlanner.Plan(180, labOut, labIn, AutomixTiming.AutoDjLab);
+var labAligned = TransitionPlanner.Plan(180, labOut, labIn, AutomixTiming.AdaptiveV2);
 var labMismatch = TransitionPlanner.Plan(180, labOut,
-    labIn with { IntroBeat = new BeatGrid(150, 0, .8) }, AutomixTiming.AutoDjLab);
-var labUncertain = TransitionPlanner.Plan(180, Synthetic(true), next, AutomixTiming.AutoDjLab);
+    labIn with { IntroBeat = new BeatGrid(150, 0, .8) }, AutomixTiming.AdaptiveV2);
+var labUncertain = TransitionPlanner.Plan(180, Synthetic(true), next, AutomixTiming.AdaptiveV2);
 Ensure(labAligned.BeatAligned && labAligned.FadeSeconds >= 1.4 &&
     labAligned.StartSeconds + labAligned.FadeSeconds <= 180,
-    "AutoDJ Lab failed to align a reliable same-tempo pair");
+    "Adaptive v2 failed to align a reliable same-tempo pair");
 Ensure(!labMismatch.BeatAligned && labMismatch.FadeSeconds <= 4.01 &&
     !labUncertain.BeatAligned && labUncertain.FadeSeconds <= 4.51,
-    "AutoDJ Lab must choose a conservative fallback for uncertain grids");
+    "Adaptive v2 must choose a conservative fallback for uncertain grids");
 var loudIntro = next with
 {
     IntroAttack = .8,
@@ -86,6 +86,8 @@ Ensure(restored?.AutomixTiming == AutomixTiming.AdaptiveV2, "V2 preference did n
 var labRestored = JsonSerializer.Deserialize<AppSettings>(JsonSerializer.Serialize(
     new AppSettings { AutomixTiming = AutomixTiming.AutoDjLab }));
 Ensure(labRestored?.AutomixTiming == AutomixTiming.AutoDjLab, "Lab preference did not survive JSON");
+Ensure(TransitionPlanner.Plan(180, labOut, labIn, AutomixTiming.AutoDjLab) == labAligned,
+    "Old lab settings must use the merged Adaptive v2 planner");
 
 // Render the new tail from two constant, stereo tracks. The stream must remain finite,
 // stay below full scale, and end after the tail instead of cutting mid-delay.
@@ -214,16 +216,34 @@ foreach (var (file, profile) in profiles)
     Ensure(profile.DurationSeconds > 1, "Real track analysis failed: " + file);
     Console.WriteLine($"Analyzed {Path.GetFileName(file)}: {profile.DurationSeconds:0}s, outro silence {profile.OutroSilence:0.0}s, beats {profile.IntroBeat.Confidence:0.00}/{profile.OutroBeat.Confidence:0.00}");
 }
+// Every ordered pair exercises a different outro/intro combination. Keep the
+// planner within both playable regions even when one beat map is missing.
+for (int i = 0; i < profiles.Length; i++)
+    for (int j = 0; j < profiles.Length; j++)
+    {
+        if (i == j) continue;
+        var outgoing = profiles[i].Profile;
+        var incoming = profiles[j].Profile;
+        var candidate = TransitionPlanner.Plan(outgoing.DurationSeconds, outgoing, incoming, AutomixTiming.AdaptiveV2);
+        Ensure(double.IsFinite(candidate.StartSeconds) && double.IsFinite(candidate.NextSeekSeconds) &&
+            double.IsFinite(candidate.FadeSeconds) && candidate.StartSeconds >= 0 &&
+            candidate.FadeSeconds >= 0 && candidate.StartSeconds + candidate.FadeSeconds <= outgoing.DurationSeconds + .01 &&
+            candidate.NextSeekSeconds >= 0 && candidate.NextSeekSeconds + candidate.FadeSeconds < incoming.DurationSeconds,
+            $"Invalid Adaptive v2 plan for pair {i + 1} -> {j + 1}");
+        Ensure(candidate.Effect != EndingEffect.NeonRoll || candidate.BeatAligned,
+            $"Beat roll selected without alignment for pair {i + 1} -> {j + 1}");
+    }
+Console.WriteLine($"PASS: {profiles.Length * (profiles.Length - 1)} ordered real-track plans");
 for (int i = 0; i + 1 < profiles.Length; i++)
 {
     var current = profiles[i].Profile;
     var incoming = profiles[i + 1].Profile;
-    var plan = TransitionPlanner.Plan(current.DurationSeconds, current, incoming, AutomixTiming.AutoDjLab);
+    var plan = TransitionPlanner.Plan(current.DurationSeconds, current, incoming, AutomixTiming.AdaptiveV2);
     Ensure(double.IsFinite(plan.FadeSeconds) && plan.FadeSeconds >= 0 && plan.FadeSeconds <= 11.5 &&
         plan.StartSeconds >= 0 && plan.StartSeconds + plan.FadeSeconds <= current.DurationSeconds + .01 &&
         plan.NextSeekSeconds >= 0 && plan.NextSeekSeconds < incoming.DurationSeconds,
-        "Invalid AutoDJ Lab real-track plan");
-    Console.WriteLine($"Lab mix {i + 1}: {plan.FadeSeconds:0.00}s, aligned {plan.BeatAligned}, effect {plan.Effect}");
+        "Invalid merged Adaptive v2 real-track plan");
+    Console.WriteLine($"Merged mix {i + 1}: {plan.FadeSeconds:0.00}s, aligned {plan.BeatAligned}, effect {plan.Effect}");
 }
 for (int i = 0; i + 1 < profiles.Length; i++)
 {
@@ -255,8 +275,7 @@ if (profiles.Length >= 2)
 {
     var oldProfile = profiles[0].Profile;
     var newProfile = profiles[1].Profile;
-    var renderTiming = Environment.GetEnvironmentVariable("WAVEPLAYER_RENDER_LAB") == "1"
-        ? AutomixTiming.AutoDjLab : AutomixTiming.AdaptiveV2;
+    var renderTiming = AutomixTiming.AdaptiveV2;
     var plan = TransitionPlanner.Plan(oldProfile.DurationSeconds, oldProfile, newProfile, renderTiming);
     const double prewarmSeconds = 1.25;
     var scheduledStart = Math.Max(0, plan.StartSeconds - prewarmSeconds);

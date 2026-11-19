@@ -17,7 +17,6 @@ internal sealed partial class SettingsWindow : Window
     public event Action<bool>? VisualizerPreviewChanged;
     private SpectrumLab _spectrumLab = null!;
     private RadioButton _classicTiming = null!;
-    private RadioButton _labTiming = null!;
     private Border BuildMusicCard()
     {
         var body = new StackPanel();
@@ -161,10 +160,8 @@ internal sealed partial class SettingsWindow : Window
         timing.Children.Add(ChoiceOption("Automix timing", "Adaptive", "Original adaptive blend", settings.AutomixTiming == AutomixTiming.Adaptive));
         _classicTiming = ChoiceOption("Automix timing", "Classic", "Short blends · about 3–5 seconds", classic);
         timing.Children.Add(_classicTiming);
-        _v2Timing = ChoiceOption("Automix timing", "Adaptive (v2)", "Audio roll, filter sweep and echo", settings.AutomixTiming == AutomixTiming.AdaptiveV2);
+        _v2Timing = ChoiceOption("Automix timing", "Adaptive (v2)", "Bar-aware blend, bass handoff and selective FX", settings.AutomixTiming is AutomixTiming.AdaptiveV2 or AutomixTiming.AutoDjLab);
         timing.Children.Add(_v2Timing);
-        _labTiming = ChoiceOption("Automix timing", "AutoDJ Lab", "Bar-aware blend · safe fallback", settings.AutomixTiming == AutomixTiming.AutoDjLab);
-        timing.Children.Add(_labTiming);
         body.Children.Add(timing);
         body.Children.Add(new TextBlock { Text = "Audio buffering", Foreground = Ink, FontSize = 11,
             FontWeight = FontWeights.SemiBold, Margin = new Thickness(1, 15, 0, 6) });
@@ -279,8 +276,7 @@ internal sealed partial class SettingsWindow : Window
             _settings.Sensitivity = _sensitivity.Value;
             _settings.Volume = _volume.Value;
             _settings.EqualizerEnabled = _eq.IsChecked == true;
-            _settings.AutomixTiming = _labTiming.IsChecked == true ? AutomixTiming.AutoDjLab
-                : _v2Timing.IsChecked == true ? AutomixTiming.AdaptiveV2
+            _settings.AutomixTiming = _v2Timing.IsChecked == true ? AutomixTiming.AdaptiveV2
                 : _classicTiming.IsChecked == true ? AutomixTiming.Classic : AutomixTiming.Adaptive;
             _settings.StableAudioBuffering = _stableAudio.IsChecked == true;
             _settings.AutomixOverlayScale = _overlayScale.Value;
