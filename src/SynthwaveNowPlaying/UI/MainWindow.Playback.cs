@@ -10,6 +10,35 @@ namespace SynthwaveNowPlaying;
 
 public partial class MainWindow : Window
 {
+    private DateTime _lastPlaybackSaveUtc;
+
+    private void SavePlaybackState(bool force = false)
+    {
+        if (!force && DateTime.UtcNow - _lastPlaybackSaveUtc < TimeSpan.FromSeconds(5)) return;
+        _lastPlaybackSaveUtc = DateTime.UtcNow;
+        _settings.LastTrack = _localTrack;
+        _settings.LastQueueSourceId = _activeQueueSourceId;
+        _settings.LastPositionSeconds = _audioReader?.CurrentTime.TotalSeconds ?? 0;
+        _settings.Save();
+    }
+
+    private void RestorePlaybackState()
+    {
+        var file = _settings.LastTrack;
+        if (string.IsNullOrWhiteSpace(file) || !File.Exists(file) || !_library.Contains(file, StringComparer.OrdinalIgnoreCase)) return;
+        var source = _playlistSources.FirstOrDefault(item =>
+            string.Equals(item.Id, _settings.LastQueueSourceId, StringComparison.OrdinalIgnoreCase) &&
+            item.Files.Contains(file, StringComparer.OrdinalIgnoreCase))
+            ?? _playlistSources.FirstOrDefault(item => item.Files.Contains(file, StringComparer.OrdinalIgnoreCase));
+        if (source is null) return;
+        _activeQueue = source.Files.ToList();
+        _activeQueueSourceId = source.Id;
+        PlaylistSourcePicker.SelectedItem = source;
+        var index = _activeQueue.FindIndex(item => string.Equals(item, file, StringComparison.OrdinalIgnoreCase));
+        if (index < 0) return;
+        TryPlayLibraryTrack(index, _settings.LastPositionSeconds);
+    }
+
     // Only the local NAudio playback chain receives EQ changes.
     private void PlayPauseButton_Click(object sender, RoutedEventArgs e)
     {
@@ -19,6 +48,8 @@ public partial class MainWindow : Window
             else if (_waveOut.PlaybackState == PlaybackState.Playing) _waveOut.Pause();
             else _waveOut.Play();
             SetPlayPauseState(_waveOut.PlaybackState == PlaybackState.Playing);
+            SourceStatus.Text = _waveOut.PlaybackState == PlaybackState.Playing ? "LOCAL · PLAYING" : "LOCAL · PAUSED";
+            SavePlaybackState(force: true);
             return;
         }
         StartPlaylistPlayback(false);
@@ -77,7 +108,7 @@ public partial class MainWindow : Window
         SourceStatus.Text = "NO PLAYABLE TRACKS";
     }
 
-    private bool TryPlayLibraryTrack(int index)
+    private bool TryPlayLibraryTrack(int index, double resumeSeconds = 0)
     {
         var file = _activeQueue[index];
         _localTrack = file;
@@ -97,10 +128,14 @@ public partial class MainWindow : Window
             _remixFailedFiles.Clear();
             _currentLevel = 1;
             _audioReader = new AudioFileReader(file) { Volume = (float)_settings.Volume };
+            if (double.IsFinite(resumeSeconds) && resumeSeconds > 0)
+                _audioReader.CurrentTime = TimeSpan.FromSeconds(Math.Min(resumeSeconds,
+                    Math.Max(0, _audioReader.TotalTime.TotalSeconds - 2)));
             _equalizer = new LocalEqualizer(_audioReader) { Enabled = _settings.EqualizerEnabled };
             for (var band = 0; band < Math.Min(6, _settings.Bands.Length); band++) _equalizer.SetGain(band, (float)_settings.Bands[band]);
             _currentBassSplit = new BassSwapSampleProvider(_equalizer);
-            _currentMixInput = new AdaptiveDeck(PrepareMixInput(_currentBassSplit), _currentBassSplit, 0);
+            _currentMixInput = new AdaptiveDeck(PrepareMixInput(_currentBassSplit), _currentBassSplit,
+                _audioReader.CurrentTime.TotalSeconds);
             _localMixer = new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(44100, 2));
             _localMixer.AddMixerInput(_currentMixInput);
             // Short reads feed the spectrum about once per display frame. Keep three buffers for playback headroom.
@@ -110,7 +145,11 @@ public partial class MainWindow : Window
             _waveOut.Init(new SpectrumTap(output, _audioSamples, _archived, () => _classicActive, _analysisSignal, NotifyAudioSignal));
             _waveOut.PlaybackStopped += LocalPlaybackStopped;
             _waveOut.Play();
+            SourceStatus.Text = "LOCAL · PLAYING";
+            SetPlayPauseState(true);
             _localProgressTimer.Start();
+            UpdateLocalProgress();
+            SavePlaybackState(force: true);
             WarmTransitionAnalysis(index);
             foreach (var row in _allPlaylistRows) row.IsCurrent = string.Equals(row.File, file, StringComparison.OrdinalIgnoreCase);
             return true;
@@ -157,6 +196,7 @@ public partial class MainWindow : Window
         DurationText.Text = FormatTime(duration);
         if (!TrackProgress.IsMouseCaptureWithin) AnimateProgress(duration.TotalMilliseconds <= 0 ? 0 : position.TotalMilliseconds / duration.TotalMilliseconds * 1000);
         MaybeStartDemoCrossfade((duration - position).TotalSeconds, duration.TotalSeconds);
+        SavePlaybackState();
     }
 
     private void EqButton_Click(object sender, RoutedEventArgs e)
@@ -235,6 +275,7 @@ public partial class MainWindow : Window
             }
         }
         if (_waveOut.PlaybackState != PlaybackState.Playing) _waveOut.Play();
+        SavePlaybackState(force: true);
     }
 
     private void StopLocalPlayback()

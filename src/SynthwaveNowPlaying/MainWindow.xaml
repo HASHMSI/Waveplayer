@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
         xmlns:local="clr-namespace:SynthwaveNowPlaying"
+        xmlns:ui="clr-namespace:SynthwaveNowPlaying.UI"
         Title="WavePlayer · Now Playing" Width="410" Height="153" MinWidth="390" MinHeight="146"
         Icon="Assets/WavePlayer.ico" WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ResizeMode="CanResizeWithGrip" Topmost="True" ShowInTaskbar="True"
@@ -314,8 +315,8 @@
                         <Grid Grid.Row="1" Margin="2,2,0,0">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <StackPanel x:Name="TrackInfoBlock" VerticalAlignment="Center" Margin="0,0,8,0" ClipToBounds="True">
-                                <TextBlock x:Name="TrackTitle" Text="Waiting for a track" Foreground="{StaticResource Ink}" FontSize="11" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
-                                <TextBlock x:Name="ArtistName" Margin="0,1,0,0" Text="Choose a track from your playlist" Foreground="{DynamicResource AlbumPrimaryBrush}" FontSize="7" TextTrimming="CharacterEllipsis"/>
+                                <ui:MarqueeText x:Name="TrackTitle" Text="Waiting for a track" Foreground="{StaticResource Ink}" FontSize="11" FontWeight="Bold"/>
+                                <ui:MarqueeText x:Name="ArtistName" Margin="0,1,0,0" Text="Choose a track from your playlist" Foreground="{DynamicResource AlbumPrimaryBrush}" FontSize="7"/>
                                 <TextBlock x:Name="TrackKey" Margin="0,1,0,0" Foreground="{DynamicResource AlbumSecondaryBrush}" FontSize="6.5" TextTrimming="CharacterEllipsis"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -336,7 +337,7 @@
                     </Grid>
                 </Grid>
                 <DockPanel Grid.Row="2" LastChildFill="True">
-                    <TextBlock x:Name="AlbumName" DockPanel.Dock="Left" Text="Album art and track info appear here" Foreground="{StaticResource Muted}" FontSize="6" VerticalAlignment="Center" Width="80" TextTrimming="CharacterEllipsis"/>
+                    <Border DockPanel.Dock="Left" Width="80" ClipToBounds="True" VerticalAlignment="Center"><ui:MarqueeText x:Name="AlbumName" Text="Album art and track info appear here" Foreground="{StaticResource Muted}" FontSize="6" VerticalAlignment="Center"/></Border>
                     <TextBlock x:Name="ElapsedText" DockPanel.Dock="Right" Text="0:00" Foreground="{StaticResource Muted}" FontSize="6" VerticalAlignment="Center" Margin="4,0,0,0"/>
                     <TextBlock x:Name="DurationText" DockPanel.Dock="Right" Text="—:—" Foreground="{StaticResource Muted}" FontSize="6" VerticalAlignment="Center" Margin="4,0,0,0"/>
                     <Slider x:Name="TrackProgress" Style="{StaticResource NeonSeekBar}" Minimum="0" Maximum="1000" Value="0" Height="14" VerticalAlignment="Center" Margin="5,0,0,0" PreviewMouseLeftButtonUp="TrackProgress_PreviewMouseLeftButtonUp"/>

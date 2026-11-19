@@ -26,8 +26,21 @@ public partial class MainWindow : Window
         _hasActivePalette = true;
         _fadeStartPalette = _displayPalette;
         _paletteFadeStarted = DateTime.UtcNow;
-        _paletteTimer.Start();
+        if (!_paletteRendering)
+        {
+            CompositionTarget.Rendering += OnPaletteFrame;
+            _paletteRendering = true;
+        }
         UpdatePaletteFrame();
+    }
+
+    private void OnPaletteFrame(object? sender, EventArgs e) => UpdatePaletteFrame();
+
+    private void StopPaletteRendering()
+    {
+        if (!_paletteRendering) return;
+        CompositionTarget.Rendering -= OnPaletteFrame;
+        _paletteRendering = false;
     }
 
     private void UpdatePaletteFrame()
@@ -45,7 +58,7 @@ public partial class MainWindow : Window
         AlbumVolume.SetPalette(primary, secondary);
         SynthBackground.ApplyAlbumPalette(primary, secondary, TimeSpan.Zero);
         if (PlaylistPopup.IsOpen) PlaylistBackground.ApplyAlbumPalette(primary, secondary, TimeSpan.Zero);
-        if (progress >= 1) _paletteTimer.Stop();
+        if (progress >= 1) StopPaletteRendering();
     }
 
     private static Color Blend(Color start, Color end, double fraction) => Color.FromRgb(

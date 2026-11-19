@@ -53,7 +53,7 @@ public partial class MainWindow : Window
     private AlbumPalette _displayPalette = new(Color.FromRgb(255, 62, 189), Color.FromRgb(61, 220, 255));
     private AlbumPalette _fadeStartPalette;
     private DateTime _paletteFadeStarted;
-    private readonly DispatcherTimer _paletteTimer = new() { Interval = TimeSpan.FromMilliseconds(33) };
+    private bool _paletteRendering;
     private bool _hasActivePalette;
     private readonly DispatcherTimer _localProgressTimer = new() { Interval = TimeSpan.FromMilliseconds(250) };
     private readonly DispatcherTimer _settingsSaveTimer = new() { Interval = TimeSpan.FromMilliseconds(500) };
@@ -93,7 +93,6 @@ public partial class MainWindow : Window
             _sizeSaveTimer.Stop();
             SaveWidgetSize();
         };
-        _paletteTimer.Tick += (_, _) => UpdatePaletteFrame();
         Loaded += MainWindow_Loaded;
         Closed += MainWindow_Closed;
         SourceInitialized += MainWindow_SourceInitialized;
@@ -126,6 +125,7 @@ public partial class MainWindow : Window
             SourceStatus.Text = "SPECTRUM UNAVAILABLE";
             ToolTip = $"Spectrum analysis could not start: {ex.Message}";
         }
+        RestorePlaybackState();
     }
 
     private void NotifyAudioSignal()
@@ -414,12 +414,12 @@ public partial class MainWindow : Window
         StopMusicWatchers();
         _sizeSaveTimer.Stop();
         SaveWidgetSize();
-        _paletteTimer.Stop();
+        StopPaletteRendering();
         _localProgressTimer.Stop();
         _settingsSaveTimer.Stop();
         _playlistMetadataCts?.Cancel();
         _playlistMetadataCts?.Dispose();
-        _settings.Save();
+        SavePlaybackState(force: true);
         CompositionTarget.Rendering -= OnCompositionRendering;
         AlbumVolume.StopAnimation();
         SynthBackground.MotionEnabled = false;

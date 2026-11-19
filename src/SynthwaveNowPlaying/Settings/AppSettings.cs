@@ -34,6 +34,9 @@ internal sealed class AppSettings
     // Local playlist edits never modify or delete the original audio or playlist files.
     public Dictionary<string, PlaylistEdits> PlaylistEdits { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public double? WidgetWidth { get; set; }
+    public string? LastTrack { get; set; }
+    public string? LastQueueSourceId { get; set; }
+    public double LastPositionSeconds { get; set; }
 
     private static string FilePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NeonWave", "settings.json");
     public static AppSettings Load()
@@ -44,7 +47,9 @@ internal sealed class AppSettings
     public void Save()
     {
         Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-        File.WriteAllText(FilePath, JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true }));
+        var temporary = FilePath + ".tmp";
+        File.WriteAllText(temporary, JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true }));
+        File.Move(temporary, FilePath, true);
     }
 }
 

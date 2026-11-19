@@ -5,7 +5,9 @@ namespace SynthwaveNowPlaying;
 internal sealed class SpectrumAnalyzer
 {
     // Reuse FFT arrays and twiddle factors; only the capture worker calls Compute().
-    private const int Size = 1024;
+    // 4096 samples resolve bass far better than 1024 at the player's 44.1 kHz
+    // output rate (about 10.8 Hz per bin instead of 43 Hz).
+    private const int Size = 4096;
     private const int Bands = 56;
     private readonly AudioSampleBuffer _samples;
     private readonly Complex[] _fft = new Complex[Size];
@@ -84,7 +86,9 @@ internal sealed class SpectrumAnalyzer
                 energy += value.Real * value.Real + value.Imaginary * value.Imaginary;
             }
             var average = Math.Sqrt(energy / Math.Max(1, end - start)) / (Size / 2d);
-            _result[band] = (float)Math.Clamp(Math.Log10(1 + average * 180) * 1.15, 0, 1);
+            // Square-root compression keeps quieter upper bands visible without
+            // letting strong bass pin every neighboring bar at full height.
+            _result[band] = (float)Math.Clamp(Math.Pow(average * 8, .58), 0, 1);
         }
         return _result;
     }

@@ -58,6 +58,8 @@ WavePlayer plays music from folders on your computer. It does not upload your mu
 - Settings and playlist edits: `%LOCALAPPDATA%\NeonWave\settings.json`
 - BPM and key analysis cache: `%LOCALAPPDATA%\NeonWave\track-analysis.json`
 
+WavePlayer also remembers the last track, its playback position, and its playlist. On the next launch it resumes playing that track when the file is still in a configured music folder.
+
 Removing a track from a WavePlayer list does not delete its audio file or change its M3U, M3U8, or PLS file.
 
 ## Build from source
