@@ -3,6 +3,9 @@
     <OutputType>WinExe</OutputType>
     <AssemblyName>WavePlayer</AssemblyName>
     <Version>1.1.1</Version>
+    <InformationalVersion>1.1.1</InformationalVersion>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <FileVersion>1.1.1</FileVersion>
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -21,4 +24,6 @@
     <PackageReference Include="TagLibSharp" Version="2.3.0" />
   </ItemGroup>
 </Project>
+
+
 

@@ -7,6 +7,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>WavePlayerSetup</AssemblyName>
     <Version>1.1.1</Version>
+    <InformationalVersion>1.1.1</InformationalVersion>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <FileVersion>1.1.1</FileVersion>
     <ApplicationIcon>..\..\src\SynthwaveNowPlaying\Assets\WavePlayer.ico</ApplicationIcon>
     <DefineConstants>$(DefineConstants);SETUP</DefineConstants>
   </PropertyGroup>
@@ -22,4 +25,6 @@
     <EmbeddedResource Include="..\intermediate\payload.zip" LogicalName="WavePlayerSetup.payload.zip" />
   </ItemGroup>
 </Project>
+
+
 
