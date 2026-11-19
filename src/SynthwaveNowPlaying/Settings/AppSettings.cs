@@ -38,7 +38,7 @@ internal sealed class AppSettings
     public string? LastQueueSourceId { get; set; }
     public double LastPositionSeconds { get; set; }
 
-    private static string FilePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NeonWave", "settings.json");
+    private static string FilePath => Path.Combine(LabData.DataDirectory, "settings.json");
     public static AppSettings Load()
     {
         try { return File.Exists(FilePath) ? JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath)) ?? new() : new(); }

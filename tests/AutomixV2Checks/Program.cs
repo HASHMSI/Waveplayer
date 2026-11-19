@@ -40,6 +40,29 @@ var onBeat = TransitionPlanner.Plan(180, Synthetic(true) with { OutroBeat = temp
 var offBeat = TransitionPlanner.Plan(180, Synthetic(true) with { OutroBeat = tempo },
     next with { IntroBeat = new BeatGrid(155, 0, .8) }, AutomixTiming.AdaptiveV2);
 Ensure(onBeat.BeatAligned && !offBeat.BeatAligned, "Beat compatibility gate failed");
+var labOut = Synthetic(true) with
+{
+    OutroBeat = tempo,
+    Features = Synthetic(true).Features! with
+    {
+        Outro = Synthetic(true).Features!.Outro with { BarAnchor = 0 }
+    }
+};
+var labIn = next with
+{
+    IntroBeat = tempo,
+    Features = next.Features! with { Intro = next.Features!.Intro with { BarAnchor = 0 } }
+};
+var labAligned = TransitionPlanner.Plan(180, labOut, labIn, AutomixTiming.AutoDjLab);
+var labMismatch = TransitionPlanner.Plan(180, labOut,
+    labIn with { IntroBeat = new BeatGrid(150, 0, .8) }, AutomixTiming.AutoDjLab);
+var labUncertain = TransitionPlanner.Plan(180, Synthetic(true), next, AutomixTiming.AutoDjLab);
+Ensure(labAligned.BeatAligned && labAligned.FadeSeconds >= 1.4 &&
+    labAligned.StartSeconds + labAligned.FadeSeconds <= 180,
+    "AutoDJ Lab failed to align a reliable same-tempo pair");
+Ensure(!labMismatch.BeatAligned && labMismatch.FadeSeconds <= 4.01 &&
+    !labUncertain.BeatAligned && labUncertain.FadeSeconds <= 4.51,
+    "AutoDJ Lab must choose a conservative fallback for uncertain grids");
 var loudIntro = next with
 {
     IntroAttack = .8,
@@ -60,6 +83,9 @@ Ensure(drop.Effect == EndingEffect.DropCut && noDrop.Effect != EndingEffect.Drop
 var restored = JsonSerializer.Deserialize<AppSettings>(JsonSerializer.Serialize(
     new AppSettings { AutomixTiming = AutomixTiming.AdaptiveV2 }));
 Ensure(restored?.AutomixTiming == AutomixTiming.AdaptiveV2, "V2 preference did not survive JSON");
+var labRestored = JsonSerializer.Deserialize<AppSettings>(JsonSerializer.Serialize(
+    new AppSettings { AutomixTiming = AutomixTiming.AutoDjLab }));
+Ensure(labRestored?.AutomixTiming == AutomixTiming.AutoDjLab, "Lab preference did not survive JSON");
 
 // Render the new tail from two constant, stereo tracks. The stream must remain finite,
 // stay below full scale, and end after the tail instead of cutting mid-delay.
@@ -190,6 +216,17 @@ foreach (var (file, profile) in profiles)
 }
 for (int i = 0; i + 1 < profiles.Length; i++)
 {
+    var current = profiles[i].Profile;
+    var incoming = profiles[i + 1].Profile;
+    var plan = TransitionPlanner.Plan(current.DurationSeconds, current, incoming, AutomixTiming.AutoDjLab);
+    Ensure(double.IsFinite(plan.FadeSeconds) && plan.FadeSeconds >= 0 && plan.FadeSeconds <= 11.5 &&
+        plan.StartSeconds >= 0 && plan.StartSeconds + plan.FadeSeconds <= current.DurationSeconds + .01 &&
+        plan.NextSeekSeconds >= 0 && plan.NextSeekSeconds < incoming.DurationSeconds,
+        "Invalid AutoDJ Lab real-track plan");
+    Console.WriteLine($"Lab mix {i + 1}: {plan.FadeSeconds:0.00}s, aligned {plan.BeatAligned}, effect {plan.Effect}");
+}
+for (int i = 0; i + 1 < profiles.Length; i++)
+{
     var current = profiles[i].Profile; var incoming = profiles[i + 1].Profile;
     var plan = TransitionPlanner.Plan(current.DurationSeconds, current, incoming, AutomixTiming.AdaptiveV2);
     Ensure(double.IsFinite(plan.FadeSeconds) && plan.FadeSeconds is >= 0 and <= 12 &&
@@ -218,7 +255,9 @@ if (profiles.Length >= 2)
 {
     var oldProfile = profiles[0].Profile;
     var newProfile = profiles[1].Profile;
-    var plan = TransitionPlanner.Plan(oldProfile.DurationSeconds, oldProfile, newProfile, AutomixTiming.AdaptiveV2);
+    var renderTiming = Environment.GetEnvironmentVariable("WAVEPLAYER_RENDER_LAB") == "1"
+        ? AutomixTiming.AutoDjLab : AutomixTiming.AdaptiveV2;
+    var plan = TransitionPlanner.Plan(oldProfile.DurationSeconds, oldProfile, newProfile, renderTiming);
     const double prewarmSeconds = 1.25;
     var scheduledStart = Math.Max(0, plan.StartSeconds - prewarmSeconds);
     var waitFrames = (long)Math.Round((plan.StartSeconds - scheduledStart) * 44100);
@@ -267,7 +306,7 @@ if (profiles.Length >= 2)
             previous[channel] = output[j];
         }
     }
-    Console.WriteLine($"Rendered real pair: peak {peakMix:0.000}, max sample jump {maxJump:0.000}");
+    Console.WriteLine($"Rendered {renderTiming} real pair: peak {peakMix:0.000}, max sample jump {maxJump:0.000}");
     Ensure(peakMix <= 1.001 && maxJump < 1.5, "Real mix clipped or developed a discontinuity");
 }
 Console.WriteLine("PASS: Adaptive v2 synthetic and real-track checks");

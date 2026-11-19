@@ -69,6 +69,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        if (LabData.Isolated) Title = "WavePlayer · AutoDJ Lab";
         RadioChannelList.ItemsSource = RadioStations;
         RestoreWidgetSize();
         DockToDesktopCorner();

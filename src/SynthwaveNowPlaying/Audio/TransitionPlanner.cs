@@ -1,6 +1,6 @@
 namespace SynthwaveNowPlaying;
 
-internal enum AutomixTiming { Adaptive, Classic, AdaptiveV2 }
+internal enum AutomixTiming { Adaptive, Classic, AdaptiveV2, AutoDjLab }
 
 internal enum EndingEffect { Clean, Filter, Echo, NaturalTail, SpaceEcho, DropCut, SweepEcho, NeonRoll }
 internal readonly record struct TransitionPlan(double StartSeconds, double NextSeekSeconds, double FadeSeconds, bool BeatAligned,
@@ -14,6 +14,7 @@ internal static class TransitionPlanner
     {
         if (timing == AutomixTiming.Classic) return PlanClassic(durationSeconds, current, next);
         if (timing == AutomixTiming.AdaptiveV2) return TransitionPlannerV2.Plan(durationSeconds, current, next);
+        if (timing == AutomixTiming.AutoDjLab) return TransitionPlannerLab.Plan(durationSeconds, current, next);
         var activeEnd = Math.Max(0, durationSeconds - current.OutroSilence - .1);
         if (current.Features is { NaturalTail: true } tail)
             activeEnd = Math.Min(durationSeconds, Math.Max(activeEnd, tail.TailEnd));

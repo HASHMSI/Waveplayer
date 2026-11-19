@@ -25,7 +25,7 @@ public partial class App : System.Windows.Application
             // Reopening the shortcut restores the hidden player instead of
             // creating a second audio engine and notification icon.
             var identity = System.Security.Principal.WindowsIdentity.GetCurrent().User!.Value;
-            var name = @"Local\WavePlayer-" + identity;
+            var name = @"Local\WavePlayer-" + identity + (LabData.Isolated ? "-AutoDjLab" : "");
             _restoreSignal = new EventWaitHandle(false, EventResetMode.AutoReset, name + "-restore");
             _previewSignal = new EventWaitHandle(false, EventResetMode.AutoReset, name + "-mixpreview");
             _instance = new Mutex(true, name, out _ownsInstance);

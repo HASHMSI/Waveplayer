@@ -20,8 +20,7 @@ internal sealed class TrackAnalysisCache
 
     public TrackAnalysisCache(string? filePath = null)
     {
-        _filePath = filePath ?? Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NeonWave", "track-analysis.json");
+        _filePath = filePath ?? Path.Combine(LabData.DataDirectory, "track-analysis.json");
         try
         {
             var document = JsonSerializer.Deserialize<CacheDocument>(File.ReadAllText(_filePath));
