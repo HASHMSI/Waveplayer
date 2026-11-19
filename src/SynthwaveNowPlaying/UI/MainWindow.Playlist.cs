@@ -240,7 +240,7 @@ public partial class MainWindow : Window
         PlaylistBackground.MotionEnabled = SpectrumHasSignal;
         PlaylistBackground.InvalidateVisual();
         SetPullArrow("⌄");
-        _ = LoadPlaylistMetadataAsync();
+        if (!_radioActive) _ = LoadPlaylistMetadataAsync();
     }
 
     private void PlaylistPopup_Closed(object? sender, EventArgs e)

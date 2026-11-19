@@ -2,6 +2,8 @@ using System.IO;
 using System.Net.Http;
 using System.Text.Json;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using NAudio.Wave;
@@ -11,14 +13,92 @@ namespace SynthwaveNowPlaying;
 
 public partial class MainWindow
 {
-    private const string RadioStreamUrl = "https://stream.nightride.fm/chillsynth.mp3";
+    private sealed record RadioStation(string Id, string Name, string Genre);
+    private static readonly RadioStation[] RadioStations =
+    [
+        new("nightride", "Nightride", "Synthwave · retro night drive"),
+        new("chillsynth", "Chillsynth", "Chillwave · soft analog glow"),
+        new("darksynth", "Darksynth", "Dark synth · neon afterhours"),
+        new("horrorsynth", "Horrorsynth", "Horror synth · midnight"),
+        new("spacesynth", "Spacesynth", "Space synth · cosmic drift"),
+        new("datawave", "Datawave", "Datawave · digital nostalgia"),
+        new("ebsm", "EBSM", "Electronic body synth music"),
+        new("rektory", "Rektory", "Industrial · electronic"),
+        new("rekt", "Rekt", "Heavy synth · high energy")
+    ];
+    private string _radioStation = "chillsynth";
     private static readonly HttpClient RadioClient = new() { Timeout = Timeout.InfiniteTimeSpan };
     private CancellationTokenSource? _radioCancel;
     private MediaFoundationReader? _radioReader;
     private WaveOut? _radioOut;
+    private VolumeSampleProvider? _radioVolume;
     private bool _radioActive;
     private int _radioGeneration;
     private int _radioLayoutGeneration;
+
+    private bool _radioVolumeDragging;
+    private double _lastRadioY;
+    private double _radioVerticalMotion;
+
+    private void RadioChannel_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string id }) return;
+        var station = RadioStations.FirstOrDefault(candidate => candidate.Id == id);
+        if (station is null || station.Id == _radioStation) { ClosePlaylistAnimated(); return; }
+        _radioStation = station.Id;
+        RadioStationTitle.Text = station.Name.ToUpperInvariant() + " FM";
+        RadioLiveLabel.Text = $"●  LIVE  ·  {station.Name.ToUpperInvariant()} FM  ·  NIGHTRIDE.FM";
+        ClosePlaylistAnimated();
+        if (!_radioActive) return;
+        StopRadioAudio();
+        TrackTitle.Text = station.Name + " FM";
+        ArtistName.Text = "Nightride FM · live radio";
+        _ = StartRadioModeAsync();
+    }
+
+    private void SpectrumFrame_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (!_radioActive || _editMode) return;
+        e.Handled = true;
+        if (!SpectrumFrame.CaptureMouse()) return;
+        _radioVolumeDragging = true;
+        _lastRadioY = e.GetPosition(SpectrumFrame).Y;
+        _radioVerticalMotion = 0;
+    }
+
+    private void SpectrumFrame_MouseMove(object sender, MouseEventArgs e)
+    {
+        if (!_radioVolumeDragging) return;
+        if (e.LeftButton != MouseButtonState.Pressed) { FinishRadioVolumeDrag(); return; }
+        var y = e.GetPosition(SpectrumFrame).Y;
+        _radioVerticalMotion += y - _lastRadioY;
+        _lastRadioY = y;
+        e.Handled = true;
+        if (SpectrumFrame.ActualHeight < 1 || Math.Abs(_radioVerticalMotion) < .8) return;
+        var next = Math.Clamp(_settings.Volume - _radioVerticalMotion / SpectrumFrame.ActualHeight, 0, 1);
+        _radioVerticalMotion = 0;
+        _settings.Volume = next;
+        if (_radioVolume is not null) _radioVolume.Volume = (float)next;
+        RadioVolumeOverlay.ShowVolume(next);
+        _settingsSaveTimer.Stop();
+        _settingsSaveTimer.Start();
+    }
+
+    private void SpectrumFrame_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (!_radioVolumeDragging) return;
+        e.Handled = true;
+        FinishRadioVolumeDrag();
+    }
+
+    private void SpectrumFrame_LostMouseCapture(object sender, MouseEventArgs e) => FinishRadioVolumeDrag();
+
+    private void FinishRadioVolumeDrag()
+    {
+        _radioVolumeDragging = false;
+        _radioVerticalMotion = 0;
+        if (SpectrumFrame.IsMouseCaptured) SpectrumFrame.ReleaseMouseCapture();
+    }
 
     private void RadioToggleButton_Click(object sender, RoutedEventArgs e)
     {
@@ -42,8 +122,8 @@ public partial class MainWindow
             _localTrack = null;
             _radioActive = true;
             SetRadioLayout(true);
-            ApplyUiPalette(new AlbumPalette(Color.FromRgb(82, 244, 185), Color.FromRgb(73, 207, 249)));
-            TrackTitle.Text = "Chillsynth FM";
+            ApplyUiPalette(new AlbumPalette(Color.FromRgb(113, 216, 244), Color.FromRgb(218, 132, 235)));
+            TrackTitle.Text = RadioStations.First(station => station.Id == _radioStation).Name + " FM";
             ArtistName.Text = "Nightride FM · live radio";
         }
         _radioCancel?.Cancel();
@@ -57,7 +137,8 @@ public partial class MainWindow
         try
         {
             // Media Foundation resolves the live MP3 URL off the UI thread.
-            reader = await Task.Run(() => new MediaFoundationReader(RadioStreamUrl));
+            var stationId = _radioStation;
+            reader = await Task.Run(() => new MediaFoundationReader($"https://stream.nightride.fm/{stationId}.mp3"));
             if (!_radioActive || generation != _radioGeneration) { reader.Dispose(); return; }
             var source = reader.ToSampleProvider();
             var volume = new VolumeSampleProvider(source) { Volume = (float)_settings.Volume };
@@ -66,6 +147,7 @@ public partial class MainWindow
                 _analysisSignal, NotifyAudioSignal));
             _radioReader = reader;
             _radioOut = output;
+            _radioVolume = volume;
             reader = null;
             output.Play();
             SourceStatus.Text = "RADIO · ON AIR";
@@ -77,6 +159,7 @@ public partial class MainWindow
             if (generation != _radioGeneration) return;
             _radioOut?.Dispose();
             _radioOut = null;
+            _radioVolume = null;
             _radioReader?.Dispose();
             _radioReader = null;
             SourceStatus.Text = "RADIO UNAVAILABLE";
@@ -87,6 +170,7 @@ public partial class MainWindow
 
     private async Task FollowRadioMetadataAsync(int generation, CancellationToken token)
     {
+        var stationId = _radioStation;
         while (!token.IsCancellationRequested)
         {
             try
@@ -102,9 +186,14 @@ public partial class MainWindow
                     using var data = JsonDocument.Parse(line.AsSpan(6).ToString());
                     foreach (var entry in data.RootElement.EnumerateArray())
                     {
-                        if (entry.GetProperty("station").GetString() != "chillsynth") continue;
+                        if (entry.GetProperty("station").GetString() != stationId) continue;
                         var title = entry.GetProperty("title").GetString();
-                        var artist = entry.GetProperty("artist").GetString();
+                        var artist = entry.TryGetProperty("artist", out var artistValue) ? artistValue.GetString() : null;
+                        if (string.IsNullOrWhiteSpace(artist) && title?.IndexOf(" - ", StringComparison.Ordinal) is int split && split > 0)
+                        {
+                            artist = title[..split];
+                            title = title[(split + 3)..];
+                        }
                         if (string.IsNullOrWhiteSpace(title)) continue;
                         await Dispatcher.InvokeAsync(() =>
                         {
@@ -125,16 +214,10 @@ public partial class MainWindow
     private void StopRadioMode(bool restoreLayout)
     {
         if (!_radioActive && _radioOut is null) return;
+        FinishRadioVolumeDrag();
+        RadioVolumeOverlay.StopAnimation();
         _radioActive = false;
-        _radioGeneration++;
-        _radioCancel?.Cancel();
-        _radioCancel?.Dispose();
-        _radioCancel = null;
-        _radioOut?.Stop();
-        _radioOut?.Dispose();
-        _radioOut = null;
-        _radioReader?.Dispose();
-        _radioReader = null;
+        StopRadioAudio();
         if (restoreLayout)
         {
             SetRadioLayout(false);
@@ -144,6 +227,20 @@ public partial class MainWindow
             ArtistName.Text = "Local music";
             SetPlayPauseState(false);
         }
+    }
+
+    private void StopRadioAudio()
+    {
+        _radioGeneration++;
+        _radioCancel?.Cancel();
+        _radioCancel?.Dispose();
+        _radioCancel = null;
+        _radioOut?.Stop();
+        _radioOut?.Dispose();
+        _radioOut = null;
+        _radioVolume = null;
+        _radioReader?.Dispose();
+        _radioReader = null;
     }
 
     private void SetRadioLayout(bool radio)
@@ -184,7 +281,14 @@ public partial class MainWindow
         DurationText.Visibility = radio ? Visibility.Collapsed : Visibility.Visible;
         TrackProgress.Visibility = radio ? Visibility.Collapsed : Visibility.Visible;
         RadioLiveLabel.Visibility = radio ? Visibility.Visible : Visibility.Collapsed;
-        RadioSpectrumBadge.Visibility = radio ? Visibility.Visible : Visibility.Collapsed;
+        RadioConsoleHeader.Visibility = radio ? Visibility.Visible : Visibility.Collapsed;
+        RadioSpectrumTint.Visibility = radio ? Visibility.Visible : Visibility.Collapsed;
+        PlaylistPullButton.Content = radio ? "CLICK TO PULL RADIO LIST" : "CLICK TO PULL SONG LIST";
+        PlaylistPullButton.ToolTip = radio ? "Open radio channels" : "Open the music library";
+        PlaylistTracksPanel.Visibility = radio ? Visibility.Collapsed : Visibility.Visible;
+        RadioChannelPanel.Visibility = radio ? Visibility.Visible : Visibility.Collapsed;
+        Spectrum.Margin = radio ? new Thickness(0, 22, 0, 0) : new Thickness(0);
+        _archived.View.Margin = Spectrum.Margin;
         EqControls.Visibility = radio ? Visibility.Collapsed : Visibility.Visible;
         RemixDemoButton.Visibility = radio ? Visibility.Collapsed : Visibility.Visible;
         RadioToggleButton.Tag = radio ? "Active" : null;

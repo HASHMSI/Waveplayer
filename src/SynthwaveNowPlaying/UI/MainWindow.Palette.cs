@@ -56,6 +56,7 @@ public partial class MainWindow : Window
         Spectrum.ApplyAlbumPalette(primary, secondary, TimeSpan.Zero);
         _archived.ApplyPalette(primary, secondary, TimeSpan.Zero);
         AlbumVolume.SetPalette(primary, secondary);
+        RadioVolumeOverlay.SetPalette(primary, secondary);
         SynthBackground.ApplyAlbumPalette(primary, secondary, TimeSpan.Zero);
         if (PlaylistPopup.IsOpen) PlaylistBackground.ApplyAlbumPalette(primary, secondary, TimeSpan.Zero);
         if (progress >= 1) StopPaletteRendering();

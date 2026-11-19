@@ -7,6 +7,7 @@ namespace SynthwaveNowPlaying;
 // Draws a short-lived water level over the cover; it never intercepts mouse input.
 internal sealed class AlbumVolumeOverlay : FrameworkElement
 {
+    public bool WideMode { get; set; }
     private static readonly Brush DimBrush = new SolidColorBrush(Color.FromArgb(65, 6, 8, 25));
     private static readonly Brush LabelPanelBrush = new SolidColorBrush(Color.FromArgb(170, 9, 10, 28));
     private static readonly Typeface NumberFace = new(new FontFamily("Bahnschrift"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
@@ -97,7 +98,7 @@ internal sealed class AlbumVolumeOverlay : FrameworkElement
         var water = new StreamGeometry();
         var wave = new StreamGeometry();
         var level = (1 - _displayVolume) * height;
-        var amplitude = Math.Min(3.8, height * .045);
+        var amplitude = WideMode ? Math.Min(6.5, height * .11) : Math.Min(3.8, height * .045);
         var step = Math.Max(2, width / 28);
         using (var fill = water.Open())
         using (var line = wave.Open())
@@ -120,7 +121,9 @@ internal sealed class AlbumVolumeOverlay : FrameworkElement
         dc.DrawGeometry(_waterBrush, null, water);
         dc.DrawGeometry(null, _wavePen, wave);
 
-        var panel = new Rect(width * .11, height * .26, width * .78, height * .48);
+        var panel = WideMode
+            ? new Rect(width * .36, height * .20, width * .28, height * .60)
+            : new Rect(width * .11, height * .26, width * .78, height * .48);
         dc.DrawRoundedRectangle(LabelPanelBrush, _panelPen, panel, 7, 7);
         var percentage = (int)Math.Round(_targetVolume * 100);
         if (_percentageText is null || percentage != _textPercent)
@@ -132,8 +135,9 @@ internal sealed class AlbumVolumeOverlay : FrameworkElement
             _labelText = new FormattedText("APP VOLUME", CultureInfo.InvariantCulture,
                 FlowDirection.LeftToRight, LabelFace, 5.6, Brushes.White, dpi);
         }
-        dc.DrawText(_percentageText, new Point((width - _percentageText.Width) / 2, panel.Top + 2));
-        if (_labelText is not null)
+        dc.DrawText(_percentageText, new Point((width - _percentageText.Width) / 2,
+            WideMode ? panel.Top + (panel.Height - _percentageText.Height) / 2 : panel.Top + 2));
+        if (!WideMode && _labelText is not null)
             dc.DrawText(_labelText, new Point((width - _labelText.Width) / 2, panel.Bottom - _labelText.Height - 3));
         dc.Pop();
         dc.Pop();

@@ -69,6 +69,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        RadioChannelList.ItemsSource = RadioStations;
         RestoreWidgetSize();
         DockToDesktopCorner();
         PlaylistPanel.RenderTransformOrigin = new Point(.5, .5);
@@ -99,6 +100,7 @@ public partial class MainWindow : Window
         SizeChanged += (_, _) => { ResizePlaylistPanel(); UpdateEditSelection(); WidgetSizeChanged(); };
         _settings.Volume = double.IsFinite(_settings.Volume) ? Math.Clamp(_settings.Volume, 0, 1) : 1;
         AlbumVolume.SetIdleVolume(_settings.Volume);
+        RadioVolumeOverlay.SetIdleVolume(_settings.Volume);
     }
 
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -384,6 +386,7 @@ public partial class MainWindow : Window
         if (_incomingEqualizer is not null) _incomingEqualizer.Enabled = _settings.EqualizerEnabled;
         ApplyPlaybackVolume();
         AlbumVolume.SetIdleVolume(_settings.Volume);
+        RadioVolumeOverlay.SetIdleVolume(_settings.Volume);
         UpdateRemixDemoButton();
     }
 
@@ -424,6 +427,7 @@ public partial class MainWindow : Window
         if (!wasRadio) SavePlaybackState(force: true);
         CompositionTarget.Rendering -= OnCompositionRendering;
         AlbumVolume.StopAnimation();
+        RadioVolumeOverlay.StopAnimation();
         SynthBackground.MotionEnabled = false;
         StopLocalPlayback();
         _spectrumThreadRunning = false;

@@ -255,12 +255,12 @@
             <Grid.RowDefinitions><RowDefinition x:Name="PlaylistBarRow" Height="14"/><RowDefinition Height="*"/></Grid.RowDefinitions>
             <Button x:Name="PlaylistPullButton" Grid.Row="0" Height="14" Padding="0" BorderThickness="0"
                     Background="{DynamicResource AlbumPrimaryBrush}" Foreground="#FF35103F" FontSize="6.5" FontWeight="Black"
-                    Cursor="Hand" Click="PlaylistPullButton_Click" ToolTip="Open the music library">
+                    Cursor="Hand" Click="PlaylistPullButton_Click" ToolTip="Open the music library" Content="CLICK TO PULL SONG LIST">
                 <Button.Template><ControlTemplate TargetType="Button">
                     <Border x:Name="PullBar" Background="{TemplateBinding Background}" CornerRadius="7,7,0,0" ClipToBounds="True">
                         <Grid>
                             <Border Background="#28FFFFFF" Height="1" VerticalAlignment="Bottom"/>
-                            <TextBlock Text="CLICK TO PULL SONG LIST" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="{TemplateBinding Content}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             <TextBlock x:Name="PullArrow" Text="⌃" FontSize="8" Foreground="#FF7C176D" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,6,0"/>
                         </Grid>
                     </Border>
@@ -289,7 +289,7 @@
                                 </Grid>
                                 <ControlTemplate.Triggers>
                                     <Trigger Property="Tag" Value="Active">
-                                        <Setter TargetName="RadioDot" Property="Fill" Value="#FF75FFC3"/>
+                                        <Setter TargetName="RadioDot" Property="Fill" Value="#FF77DBF6"/>
                                     </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate></Button.Template>
@@ -341,14 +341,35 @@
                     <Grid x:Name="SpectrumLayoutGrid" Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Margin="6,0,0,0" RenderTransformOrigin="0.5,0.5">
                         <Grid.RenderTransform><ScaleTransform x:Name="RadioSpectrumScale" ScaleX="1" ScaleY="1"/></Grid.RenderTransform>
                         <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition x:Name="TrackDetailsRow" Height="36"/></Grid.RowDefinitions>
-                        <Border x:Name="SpectrumFrame" Grid.Row="0" CornerRadius="4" Background="#42100D25" BorderBrush="{DynamicResource AlbumSecondaryBrush}" BorderThickness="1" Padding="3,2">
+                        <Border x:Name="SpectrumFrame" Grid.Row="0" CornerRadius="4" Background="#42100D25" BorderBrush="{DynamicResource AlbumSecondaryBrush}" BorderThickness="1" Padding="3,2"
+                                MouseLeftButtonDown="SpectrumFrame_MouseLeftButtonDown" MouseMove="SpectrumFrame_MouseMove"
+                                MouseLeftButtonUp="SpectrumFrame_MouseLeftButtonUp" LostMouseCapture="SpectrumFrame_LostMouseCapture">
                             <Grid x:Name="SpectrumLayers">
-                                <local:SpectrumView x:Name="Spectrum"/>
-                                <Border x:Name="RadioSpectrumBadge" Panel.ZIndex="10" Background="#BA071D2B" BorderBrush="#AA73FFC3"
-                                        BorderThickness="1" CornerRadius="5" Padding="7,3" Margin="5"
-                                        HorizontalAlignment="Left" VerticalAlignment="Top" Visibility="Collapsed" IsHitTestVisible="False">
-                                    <TextBlock Text="●  LIVE / CHILLSYNTH FM" Foreground="#FF8AFFCF" FontSize="7" FontWeight="Bold"/>
+                                <Border x:Name="RadioSpectrumTint" CornerRadius="4" Visibility="Collapsed" IsHitTestVisible="False">
+                                    <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="#C91B1943" Offset="0"/><GradientStop Color="#A7272858" Offset="0.48"/>
+                                        <GradientStop Color="#C4143557" Offset="1"/>
+                                    </LinearGradientBrush></Border.Background>
                                 </Border>
+                                <local:SpectrumView x:Name="Spectrum"/>
+                                <Border x:Name="RadioConsoleHeader" Panel.ZIndex="10"
+                                        BorderBrush="#BB7ACFEF" BorderThickness="0,0,0,1" Padding="6,1"
+                                        VerticalAlignment="Top" Visibility="Collapsed">
+                                    <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                        <GradientStop Color="#F5131731" Offset="0"/><GradientStop Color="#E5282042" Offset="0.52"/>
+                                        <GradientStop Color="#ED122C44" Offset="1"/>
+                                    </LinearGradientBrush></Border.Background>
+                                    <Grid Height="21">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Ellipse Width="5" Height="5" Fill="#FF80DDF5" Margin="0,0,6,0"/>
+                                            <TextBlock x:Name="RadioStationTitle" Text="CHILLSYNTH FM" Foreground="#FFB9EFFF" FontSize="8" FontWeight="Bold" VerticalAlignment="Center"/>
+                                            <TextBlock Text="  /  NIGHTRIDE" Foreground="#FFCBA8E9" FontSize="6" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="DRAG ↕  VOL" Foreground="#FFAFD8EF" FontSize="6" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                                <local:AlbumVolumeOverlay x:Name="RadioVolumeOverlay" Panel.ZIndex="20" IsHitTestVisible="False" WideMode="True"/>
                             </Grid>
                         </Border>
                         <Grid Grid.Row="1" Margin="2,2,0,0">
@@ -378,7 +399,7 @@
                 <DockPanel x:Name="PlayerFooter" Grid.Row="2" LastChildFill="True">
                     <Border DockPanel.Dock="Left" Width="80" ClipToBounds="True" VerticalAlignment="Center"><ui:MarqueeText x:Name="AlbumName" Text="Album art and track info appear here" Foreground="{StaticResource Muted}" FontSize="6" VerticalAlignment="Center"/></Border>
                     <TextBlock x:Name="RadioLiveLabel" DockPanel.Dock="Left" Text="●  LIVE  ·  CHILLSYNTH FM  ·  NIGHTRIDE.FM"
-                               Foreground="#FF75FFC3" FontSize="7" FontWeight="Bold" VerticalAlignment="Center" Visibility="Collapsed"/>
+                               Foreground="#FF83DDF5" FontSize="7" FontWeight="Bold" VerticalAlignment="Center" Visibility="Collapsed"/>
                     <TextBlock x:Name="ElapsedText" DockPanel.Dock="Right" Text="0:00" Foreground="{StaticResource Muted}" FontSize="6" VerticalAlignment="Center" Margin="4,0,0,0"/>
                     <TextBlock x:Name="DurationText" DockPanel.Dock="Right" Text="—:—" Foreground="{StaticResource Muted}" FontSize="6" VerticalAlignment="Center" Margin="4,0,0,0"/>
                     <Slider x:Name="TrackProgress" Style="{StaticResource NeonSeekBar}" Minimum="0" Maximum="1000" Value="0" Height="14" VerticalAlignment="Center" Margin="5,0,0,0" PreviewMouseLeftButtonUp="TrackProgress_PreviewMouseLeftButtonUp"/>
@@ -406,7 +427,7 @@
                     <Grid Width="410" Height="276" ClipToBounds="True" SizeChanged="PlaylistContent_SizeChanged">
                       <local:SynthwaveBackground x:Name="PlaylistBackground" IsHitTestVisible="False" Opacity="0.85"/>
                       <Border Background="#B914102B" IsHitTestVisible="False"/>
-                      <Grid Margin="8,8,8,18">
+                      <Grid x:Name="PlaylistTracksPanel" Margin="8,8,8,18">
                           <Grid.RowDefinitions><RowDefinition Height="30"/><RowDefinition x:Name="PlaylistSourceRow" Height="0"/><RowDefinition Height="31"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                           <DockPanel Grid.Row="0" LastChildFill="False" Margin="4,0,2,2">
                               <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
@@ -470,6 +491,51 @@
                           <Canvas Grid.Row="3" ClipToBounds="True" IsHitTestVisible="False">
                               <ContentPresenter x:Name="DragPreview" ContentTemplate="{StaticResource PlaylistTrackTemplate}" Visibility="Collapsed"/>
                           </Canvas>
+                      </Grid>
+                      <Grid x:Name="RadioChannelPanel" Margin="9,8,9,15" Visibility="Collapsed">
+                          <Grid.RowDefinitions><RowDefinition Height="33"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                          <DockPanel Grid.Row="0" LastChildFill="False" Margin="3,0,2,2">
+                              <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                                  <Ellipse Width="7" Height="7" Fill="#FF8ADCF4" Margin="0,0,8,0"/>
+                                  <TextBlock Text="RADIO CHANNELS" Foreground="#FFF0E8FF" FontSize="11" FontWeight="Bold"/>
+                              </StackPanel>
+                              <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                                  <TextBlock Text="9 CHANNELS" Foreground="#FF91D8F0" FontSize="7" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                  <Button Style="{StaticResource NeonButton}" Content="⌄" Width="21" Height="20" Padding="0" FontSize="12" Click="PlaylistCollapseButton_Click" ToolTip="Close radio list"/>
+                              </StackPanel>
+                          </DockPanel>
+                          <Border Grid.Row="0" Height="1" VerticalAlignment="Bottom" Background="#8979BFE7"/>
+                          <ListBox x:Name="RadioChannelList" Grid.Row="1" Background="Transparent" BorderThickness="0"
+                                   ItemContainerStyle="{StaticResource PlaylistListItem}"
+                                   ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                              <ListBox.Resources><Style TargetType="ScrollBar" BasedOn="{StaticResource NeonScrollBar}"/></ListBox.Resources>
+                              <ListBox.ItemTemplate><DataTemplate>
+                                  <Button Tag="{Binding Id}" Click="RadioChannel_Click" Height="34" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                          Margin="1,2,2,2" Padding="0" Cursor="Hand" Background="#B9211C41"
+                                          BorderBrush="#826695BE" BorderThickness="1">
+                                      <Button.Template><ControlTemplate TargetType="Button">
+                                          <Border x:Name="ChannelCard" CornerRadius="7" Background="{TemplateBinding Background}"
+                                                  BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" Padding="9,3">
+                                              <ContentPresenter/>
+                                          </Border>
+                                          <ControlTemplate.Triggers>
+                                              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ChannelCard" Property="Background" Value="#BA35306A"/><Setter TargetName="ChannelCard" Property="BorderBrush" Value="#FF8CDDF5"/></Trigger>
+                                              <Trigger Property="IsPressed" Value="True"><Setter TargetName="ChannelCard" Property="Background" Value="#C2463976"/></Trigger>
+                                          </ControlTemplate.Triggers>
+                                      </ControlTemplate>
+                                      </Button.Template>
+                                      <Grid>
+                                          <Grid.ColumnDefinitions><ColumnDefinition Width="24"/><ColumnDefinition Width="*"/><ColumnDefinition Width="42"/></Grid.ColumnDefinitions>
+                                          <Ellipse Width="12" Height="12" Fill="#FF82D5F1" Opacity="0.83" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                          <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                              <TextBlock Text="{Binding Name}" Foreground="#FFF2EBFF" FontSize="9" FontWeight="Bold"/>
+                                              <TextBlock Text="{Binding Genre}" Foreground="#FFB7A8D4" FontSize="6.5"/>
+                                          </StackPanel>
+                                          <TextBlock Grid.Column="2" Text="TUNE IN" Foreground="#FF8EDFF5" FontSize="6.5" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                      </Grid>
+                                  </Button>
+                              </DataTemplate></ListBox.ItemTemplate>
+                          </ListBox>
                       </Grid>
                     </Grid>
                   </Viewbox>
