@@ -42,6 +42,15 @@ public partial class MainWindow : Window
     // Only the local NAudio playback chain receives EQ changes.
     private void PlayPauseButton_Click(object sender, RoutedEventArgs e)
     {
+        if (_radioActive)
+        {
+            if (_radioOut is null) { _ = StartRadioModeAsync(); return; }
+            if (_radioOut.PlaybackState == PlaybackState.Playing) _radioOut.Pause(); else _radioOut.Play();
+            var playing = _radioOut.PlaybackState == PlaybackState.Playing;
+            SetPlayPauseState(playing);
+            SourceStatus.Text = playing ? "RADIO · ON AIR" : "RADIO · PAUSED";
+            return;
+        }
         if (_localTrack is not null && _waveOut is not null)
         {
             if (_incomingReader is not null) ToggleDemoCrossfadePause();
@@ -57,12 +66,14 @@ public partial class MainWindow : Window
 
     private void PreviousButton_Click(object sender, RoutedEventArgs e)
     {
+        if (_radioActive) return;
         if (_localTrack is null) StartPlaylistPlayback(true);
         else SkipLocalTrack(forward: false);
     }
 
     private void NextButton_Click(object sender, RoutedEventArgs e)
     {
+        if (_radioActive) return;
         if (_localTrack is null) StartPlaylistPlayback(false);
         else SkipLocalTrack(forward: true);
     }
@@ -110,6 +121,7 @@ public partial class MainWindow : Window
 
     private bool TryPlayLibraryTrack(int index, double resumeSeconds = 0)
     {
+        if (_radioActive) StopRadioMode(true);
         var file = _activeQueue[index];
         _localTrack = file;
         var tags = _trackMetadataCache.TryGetValue(file, out var cached) ? cached : ReadTrackMetadata(file);

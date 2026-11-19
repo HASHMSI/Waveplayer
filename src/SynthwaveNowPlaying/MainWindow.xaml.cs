@@ -410,6 +410,8 @@ public partial class MainWindow : Window
 
     private void MainWindow_Closed(object? sender, EventArgs e)
     {
+        var wasRadio = _radioActive;
+        StopRadioMode(false);
         DismissMixOverlay(immediately: true);
         StopMusicWatchers();
         _sizeSaveTimer.Stop();
@@ -419,7 +421,7 @@ public partial class MainWindow : Window
         _settingsSaveTimer.Stop();
         _playlistMetadataCts?.Cancel();
         _playlistMetadataCts?.Dispose();
-        SavePlaybackState(force: true);
+        if (!wasRadio) SavePlaybackState(force: true);
         CompositionTarget.Rendering -= OnCompositionRendering;
         AlbumVolume.StopAnimation();
         SynthBackground.MotionEnabled = false;
