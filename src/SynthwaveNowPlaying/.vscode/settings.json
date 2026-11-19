@@ -1,8 +1,10 @@
 {
-  "dotnetAcquisitionExtension.existingDotnetPath": [
-    {
-      "extensionId": "ms-dotnettools.csharp",
-      "path": "F:\\CodexScratch\\.dotnet\\dotnet.exe"
-    }
-  ]
+  "search.exclude": {
+    "**/bin": true,
+    "**/obj": true
+  },
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true
+  }
 }

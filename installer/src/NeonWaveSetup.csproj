@@ -19,6 +19,6 @@
     <EmbeddedResource Include="Assets\*.mp3" LogicalName="WavePlayerSetup.Assets.%(Filename)%(Extension)" />
     <EmbeddedResource Include="Assets\spectrum-demo.bin" LogicalName="WavePlayerSetup.Assets.spectrum-demo.bin" />
     <EmbeddedResource Include="..\..\src\SynthwaveNowPlaying\Classic\SynthwaveNowPlaying.dll" LogicalName="Setup.Classic.dll" />
-    <EmbeddedResource Include="payload.zip" LogicalName="WavePlayerSetup.payload.zip" />
+    <EmbeddedResource Include="..\intermediate\payload.zip" LogicalName="WavePlayerSetup.payload.zip" />
   </ItemGroup>
 </Project>

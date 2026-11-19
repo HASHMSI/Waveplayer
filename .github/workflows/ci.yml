@@ -1,0 +1,41 @@
+name: Windows checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build player
+        run: dotnet build ./src/SynthwaveNowPlaying/SynthwaveNowPlaying.csproj -c Release
+      - name: Key detector checks
+        run: dotnet run --project tests/KeyDetectorChecks -c Release
+      - name: Automix checks
+        run: dotnet run --project tests/AutomixV2Checks -c Release
+      - name: Build offline setup
+        run: ./installer/build-setup.ps1
+      - name: Verify payload contracts
+        run: |
+          $expected = 'E588E55427F8A9F76963D56D97BEED7CC1FE4C95ED5E1C2C66AA0AB52A5B528F'
+          if ((Get-FileHash installer/payload/Classic/SynthwaveNowPlaying.dll).Hash -ne $expected) { throw 'Classic DLL changed' }
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $zip = [IO.Compression.ZipFile]::OpenRead("$PWD/installer/intermediate/payload.zip")
+          try {
+            foreach ($name in @('WavePlayer.exe', 'WavePlayer.dll', 'Classic/SynthwaveNowPlaying.dll')) {
+              if (-not $zip.GetEntry($name)) { throw "Missing payload entry: $name" }
+            }
+          } finally { $zip.Dispose() }
+          if (-not (Test-Path installer/release/WavePlayerSetup.exe)) { throw 'Setup missing' }
+          git diff --exit-code
+          if ($LASTEXITCODE -ne 0) { throw 'Build changed tracked source' }

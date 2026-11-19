@@ -1,5 +1,11 @@
 # Adaptive (v2)
 
+## Status
+
+TransitionPlannerV2 and AdaptiveDeck are the authoritative selection/rendering logic. The notes below record successive changes and earlier measurements; references to the current effect in older entries describe that stage, not an unconditional rule. Run [testing](testing.md) for fresh evidence.
+
+## Implementation history and recorded validation
+
 Pre-cue playback regression: the player arms both decks 1.25 seconds before the
 transition. Previously the outgoing deck entered the effect renderer with a
 negative age, producing a negative delay-ring index and stopping the audio

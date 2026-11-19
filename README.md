@@ -76,6 +76,12 @@ To build the offline installer:
 
 The installer is created at `installer\release\WavePlayerSetup.exe`. The player uses [NAudio](https://github.com/naudio/NAudio) for audio and [TagLibSharp](https://github.com/mono/taglib-sharp) for track tags and artwork.
 
+## Contributor documentation
+
+See the [documentation index](docs/README.md), [development](docs/development.md), [testing](docs/testing.md), and [release procedure](docs/releasing.md). Read [CONTRIBUTING.md](CONTRIBUTING.md), [troubleshooting](docs/troubleshooting.md), and [SECURITY.md](SECURITY.md) as appropriate.
+
+Read the [copyright notice](COPYRIGHT.txt), [privacy information](PRIVACY.md), [third-party credits](THIRD_PARTY_NOTICES.md), and [asset records](docs/assets.md).
+
 ## Project contents
 
 ```text
@@ -87,4 +93,8 @@ tests/AutomixV2Checks/    Automix timing and offline audio checks
 promo/                    Introduction video
 ```
 
-Made by **MSIHASH × SENIOR B** 💜
+Made by **MSIHASH x SENIOR B** 💜
+
+Vibe coded via **Codex**.
+
+**Copyright © 2026 MSIHASH x SENIOR B.** See [copyright notice](COPYRIGHT.txt) and [third-party notices](THIRD_PARTY_NOTICES.md).

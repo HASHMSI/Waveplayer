@@ -1,0 +1,35 @@
+name: Bug report
+description: Report a reproducible WavePlayer problem.
+body:
+  - type: markdown
+    attributes:
+      value: "Do not attach private music, credentials or personal paths. Read SECURITY.md before reporting sensitive details."
+  - type: input
+    id: version
+    attributes:
+      label: WavePlayer version
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version and architecture
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Relevant settings and audio format/device
+      description: Include Automix, buffer and visualizer modes if relevant; redact personal data.

@@ -1,13 +1,14 @@
 {
   "name": "promo",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Remotion sources for the historical Neon Wave introduction video for WavePlayer",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "studio": "remotion studio film.jsx",
+    "render": "remotion render film.jsx NeonWave ../.verify/promo/Neon-Wave.mp4",
+    "score": "python score.py"
   },
   "keywords": [],
-  "author": "",
+  "author": "MSIHASH x SENIOR B",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
@@ -15,5 +16,6 @@
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "remotion": "^4.0.544"
-  }
+  },
+  "private": true
 }

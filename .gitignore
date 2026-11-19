@@ -14,3 +14,6 @@ installer/dist/
 installer/src/payload.zip
 installer/src/payload.zip.tmp
 promo/node_modules/
+
+# Generated setup packaging intermediate
+installer/intermediate/

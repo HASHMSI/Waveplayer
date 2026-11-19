@@ -1,5 +1,5 @@
 # WavePlayer / Synthwave Now Playing
 
-This is the modular working source of the Windows chillwave player and live visualizer. See [the workspace README](../../README.md) for build steps, source map, audio architecture, saved settings, and restore point.
+See [development](../../docs/development.md) for prerequisites, architecture and output paths, and [testing](../../docs/testing.md) for checks. Open **this folder** in VS Code for the build task and F5. Install the .NET 10 SDK on PATH.
 
-Open **this folder** in VS Code for the included build task and F5 launch configuration.
+The public assembly uses WavePlayer; historical project/namespace names remain for compatibility. See the [root README](../../README.md) for installation and user-data locations. Historical local restore points are not included in this repository.

@@ -1,0 +1,6 @@
+Copyright © 2026 MSIHASH x SENIOR B. All rights reserved.
+
+WavePlayer — Windows music player.
+Created by MSIHASH x SENIOR B. Vibe coded via Codex.
+
+Third-party libraries and components retain their respective copyrights and licenses. See THIRD_PARTY_NOTICES.md for component attribution and license identifiers.

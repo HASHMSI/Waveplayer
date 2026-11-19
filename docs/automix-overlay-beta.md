@@ -1,6 +1,6 @@
 # Automix overlay
 
-First developed in the 1.0.7 beta and included in the 1.1.0 setup. Backup before implementation:
+First developed in the 1.0.7 beta and included in the 1.1.0 setup. Historical local backup before implementation (not included in this repository or an available restore procedure):
 `backup/pre-automix-overlay-beta-2026-11-18/` (source ZIP, installed application files and settings).
 
 The 280×132 DIP popup appears near the top-right work area only while the player

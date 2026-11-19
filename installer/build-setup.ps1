@@ -3,7 +3,7 @@ param([string]$Dotnet = 'dotnet')
 $ErrorActionPreference = 'Stop'
 $project = Join-Path $PSScriptRoot '../src/SynthwaveNowPlaying/SynthwaveNowPlaying.csproj'
 $setupProject = Join-Path $PSScriptRoot 'src/NeonWaveSetup.csproj'
-$zip = Join-Path $PSScriptRoot 'src/payload.zip'
+$zip = Join-Path $PSScriptRoot 'intermediate/payload.zip'
 $output = Join-Path $PSScriptRoot 'release'
 $payload = Join-Path $PSScriptRoot 'payload'
 
@@ -19,6 +19,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Player publish failed.' }
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 if (Test-Path -LiteralPath $zip) { Remove-Item -LiteralPath $zip -Force }
+New-Item -ItemType Directory -Path (Split-Path -Parent $zip) -Force | Out-Null
 [IO.Compression.ZipFile]::CreateFromDirectory($payload, $zip, [IO.Compression.CompressionLevel]::Optimal, $false)
 New-Item -ItemType Directory -Path $output -Force | Out-Null
 & $Dotnet publish $setupProject -c Release -r win-x64 --self-contained true `
