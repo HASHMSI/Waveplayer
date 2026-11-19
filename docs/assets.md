@@ -32,7 +32,8 @@ No byte-identical duplicates were found in this inventory. Similar screenshots a
 
 Installer previews reference all three MP3s and spectrum-demo.bin; spectrum frames are synchronized at 60 frames/second. Preserve the media pair and logical resource names. Setup identifies the mix example as Revolve → Don't Sleep Yet; permission evidence is not recorded here.
 
-Generated installer/payload, payload-legacy, intermediate, release, project bin/obj, root .build/.verify and promo/node_modules are ignored output, not source. Tracked Classic DLL, score.wav and Neon-Wave.mp4 remain retained assets even though they originated from generation/build steps.
+Generated installer/payload, payload-legacy, intermediate, release, project bin/obj, root .build and promo/node_modules are ignored output, not source. Tracked Classic DLL, score.wav and Neon-Wave.mp4 remain retained assets even though they originated from generation/build steps.
 
 Maintainers must confirm asset permissions, historical screenshot/design ownership and Classic reproducibility before claiming distribution clearance. See ../THIRD_PARTY_NOTICES.md.
+
 

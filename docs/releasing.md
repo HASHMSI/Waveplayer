@@ -5,7 +5,7 @@
 Commit 3e2b196 intentionally disabled automatic launch checks. Publish only `installer/release/WavePlayerSetup.exe`. Never upload the entire output folder or a wildcard: old compatibility ZIPs may coexist there.
 
 1. Review changes, media permissions and notices before distribution.
-2. Keep player/setup project versions equal (currently 1.2.0); use a matching tag and reviewed GitHub release notes covering changes, compatibility and limitations. Release notes are the release-history record.
+2. Keep player/setup project versions equal (currently 1.1.1); use a matching tag and reviewed GitHub release notes covering changes, compatibility and limitations. Release notes are the release-history record.
 3. Run both [check programs](testing.md), then from root using PowerShell 7:
 
    ```powershell
@@ -33,3 +33,4 @@ Both scripts mutate installer/payload and installer/release. Run sequentially or
 ## Attribution in releases
 
 Preserve Copyright © 2026 MSIHASH x SENIOR B and the Vibe coded via Codex credit. Include the applicable third-party license texts and notices for the actual published dependency set. Use THIRD_PARTY_NOTICES.md and docs/assets.md to identify dependencies and retained media. Keep copyright attribution separate from upstream component terms.
+
