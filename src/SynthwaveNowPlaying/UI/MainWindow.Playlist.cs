@@ -240,6 +240,11 @@ public partial class MainWindow : Window
         PlaylistBackground.MotionEnabled = SpectrumHasSignal;
         PlaylistBackground.InvalidateVisual();
         SetPullArrow("⌄");
+        PlaylistPanel.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(240))
+        { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } });
+        _playlistPanelTransform.BeginAnimation(TranslateTransform.YProperty,
+            new DoubleAnimation(10, 0, TimeSpan.FromMilliseconds(300))
+            { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } });
         if (!_radioActive) _ = LoadPlaylistMetadataAsync();
     }
 

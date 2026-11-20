@@ -69,7 +69,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        if (LabData.Isolated) Title = "WavePlayer · Adaptive v2 Preview";
+        if (LabData.Isolated) Title = "WavePlayer · Radio Concept Preview";
         RadioChannelList.ItemsSource = RadioStations;
         RestoreWidgetSize();
         DockToDesktopCorner();
@@ -128,7 +128,9 @@ public partial class MainWindow : Window
             SourceStatus.Text = "SPECTRUM UNAVAILABLE";
             ToolTip = $"Spectrum analysis could not start: {ex.Message}";
         }
-        RestorePlaybackState();
+        if (Environment.GetEnvironmentVariable("WAVEPLAYER_RADIO_PREVIEW") == "1")
+            _ = StartRadioModeAsync();
+        else { ShowRadioConcept(false); RestorePlaybackState(); }
     }
 
     private void NotifyAudioSignal()
@@ -298,10 +300,12 @@ public partial class MainWindow : Window
 
     private void SetPlayPauseState(bool playing)
     {
+        _radioConcept?.UpdatePlayback(playing, _radioOut is not null);
         PlayIcon.Visibility = playing ? Visibility.Collapsed : Visibility.Visible;
         PauseIcon.Visibility = playing ? Visibility.Visible : Visibility.Collapsed;
         PlayPauseButton.Tag = playing ? "Active" : null;
         PlayPauseButton.ToolTip = playing ? "Pause" : "Play";
+        if (!_radioActive) RefreshLocalConcept();
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e) => Close();
