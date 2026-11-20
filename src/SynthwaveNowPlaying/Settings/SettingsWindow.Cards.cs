@@ -272,6 +272,8 @@ internal sealed partial class SettingsWindow : Window
             _settings.CustomSecondary = CustomPalette.Hex(_secondaryPicker.SelectedColor);
             _settings.CustomMix = _customMix;
             _settings.BackgroundImage = File.Exists(_image.Text) ? _image.Text : null;
+            _settings.UiStyle = _uiStyleChoice;
+            _settings.ThemeChoiceMade = true;
             _settings.ClassicVisualizer = _spectrumLab.UsesPulse;
             _settings.Sensitivity = _sensitivity.Value;
             _settings.Volume = _volume.Value;

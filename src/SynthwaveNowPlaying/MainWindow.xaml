@@ -4,10 +4,12 @@
         xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
         xmlns:local="clr-namespace:SynthwaveNowPlaying"
         xmlns:ui="clr-namespace:SynthwaveNowPlaying.UI"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         Title="WavePlayer · Now Playing" Width="410" Height="153" MinWidth="390" MinHeight="146"
-        Icon="Assets/WavePlayer.ico" WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        Icon="Assets/WavePlayer.ico" WindowStyle="None" AllowsTransparency="False" Background="#101329"
         ResizeMode="CanResizeWithGrip" Topmost="True" ShowInTaskbar="True"
         WindowStartupLocation="Manual" UseLayoutRounding="True" SnapsToDevicePixels="True" FontFamily="Bahnschrift">
+    <shell:WindowChrome.WindowChrome><shell:WindowChrome CaptionHeight="0" ResizeBorderThickness="4" GlassFrameThickness="0" CornerRadius="10" UseAeroCaptionButtons="False"/></shell:WindowChrome.WindowChrome>
     <Window.Resources>
         <SolidColorBrush x:Key="Ink" Color="#FFF7F1FF" />
         <SolidColorBrush x:Key="Muted" Color="#FFB7AFCB" />
@@ -275,7 +277,7 @@
            <Grid x:Name="DesignSurface" Width="410" Height="139" ClipToBounds="True">
             <local:SynthwaveBackground x:Name="SynthBackground" IsHitTestVisible="False"/>
             <Image x:Name="CustomBackgroundImage" Stretch="UniformToFill" Opacity="0.22" IsHitTestVisible="False" Visibility="Collapsed"/>
-            <Grid Margin="8,6,8,6">
+            <Grid x:Name="BasePlayerChrome" Margin="8,6,8,6">
                 <Grid.RowDefinitions><RowDefinition Height="19"/><RowDefinition Height="*"/><RowDefinition Height="22"/></Grid.RowDefinitions>
                 <DockPanel Grid.Row="0" LastChildFill="False">
                     <StackPanel x:Name="BrandBlock" Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">

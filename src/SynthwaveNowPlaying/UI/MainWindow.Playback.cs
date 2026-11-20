@@ -204,6 +204,7 @@ public partial class MainWindow : Window
         if (_audioReader is null) return;
         var position = TimeSpan.FromSeconds((double)_audioReader.Position / _audioReader.WaveFormat.AverageBytesPerSecond);
         ElapsedText.Text = FormatTime(position);
+        RefreshLocalConcept();
         var duration = TimeSpan.FromSeconds((double)_audioReader.Length / _audioReader.WaveFormat.AverageBytesPerSecond);
         DurationText.Text = FormatTime(duration);
         if (!TrackProgress.IsMouseCaptureWithin) AnimateProgress(duration.TotalMilliseconds <= 0 ? 0 : position.TotalMilliseconds / duration.TotalMilliseconds * 1000);

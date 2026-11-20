@@ -17,6 +17,10 @@
   <ItemGroup>
     <Resource Include="$(ApplicationIcon)" />
     <Resource Include="Assets\AutomixDisc.png" />
+    <Page Include="..\..\installer\theme-preview\ThemeWindow.xaml" Link="UI\ThemeWindow.xaml" />
+    <Compile Include="..\..\installer\theme-preview\ThemeWindow.xaml.cs" Link="UI\ThemeWindow.xaml.cs" />
+    <Resource Include="..\..\installer\theme-preview\Assets\*.jpg" Link="Assets\%(Filename)%(Extension)" />
+    <Content Include="Assets\SynthwaveRoad-frames.zip" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Page Remove="Settings\SpectrumLab.xaml" />
     <EmbeddedResource Include="Settings\SpectrumLab.xaml" LogicalName="Settings.SpectrumLab.xaml" />
     <Content Include="Classic\SynthwaveNowPlaying.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />

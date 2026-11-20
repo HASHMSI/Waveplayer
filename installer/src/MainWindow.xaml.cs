@@ -9,6 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using WavePlayer.ThemePreview;
 
 namespace WavePlayerSetup;
 
@@ -20,6 +21,7 @@ public partial class MainWindow : Window
     private string _destination = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "WavePlayer");
     private readonly List<string> _folders = [];
     private string _theme = "Neon Grid";
+    private string _uiStyle = "NeonDrive";
     private string _primary = "#FF47B8";
     private string _secondary = "#45D8FF";
     private string _timing = "Adaptive";
@@ -55,6 +57,7 @@ public partial class MainWindow : Window
                 _folders.AddRange(previous?["MusicFolders"]?.AsArray().Select(item => item?.GetValue<string>() ?? "").Where(Directory.Exists) ?? []);
                 if (_folders.Count == 0 && previous?["MusicFolder"]?.GetValue<string>() is { } single && Directory.Exists(single)) _folders.Add(single);
                 _theme = previous?["Background"]?.GetValue<string>() ?? _theme;
+                _uiStyle = previous?["UiStyle"]?.GetValue<string>() ?? _uiStyle;
                 _primary = previous?["CustomPrimary"]?.GetValue<string>() ?? _primary;
                 _secondary = previous?["CustomSecondary"]?.GetValue<string>() ?? _secondary;
                 _timing = previous?["AutomixTiming"]?.GetValue<int>() switch
@@ -75,6 +78,12 @@ public partial class MainWindow : Window
             var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
             scale.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(.97, 1, TimeSpan.FromMilliseconds(520)) { EasingFunction = ease });
             scale.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(.97, 1, TimeSpan.FromMilliseconds(520)) { EasingFunction = ease });
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                var chooser = new ThemeWindow(_uiStyle == "Modern80s") { Owner = this };
+                if (chooser.ShowDialog() != true) { Close(); return; }
+                _uiStyle = chooser.SelectedStyle;
+            }));
         };
         Closed += (_, _) => StopDemo();
         RenderStage();
@@ -457,6 +466,8 @@ public partial class MainWindow : Window
         try { data = File.Exists(path) ? JsonNode.Parse(File.ReadAllText(path)) as JsonObject ?? new() : new(); }
         catch { data = new(); }
         data["Background"] = _theme;
+        data["UiStyle"] = _uiStyle;
+        data["ThemeChoiceMade"] = true;
         data["CustomPrimary"] = _primary;
         data["CustomSecondary"] = _secondary;
         data["MusicFolders"] = new JsonArray(_folders.Select(folder => JsonValue.Create(folder)).ToArray());

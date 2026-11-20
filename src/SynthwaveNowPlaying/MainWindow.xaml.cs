@@ -69,7 +69,8 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        if (LabData.Isolated) Title = "WavePlayer · Adaptive v2 Preview";
+        InitializeSmoothDrag();
+        if (LabData.Isolated) Title = "WavePlayer · Radio Concept Preview";
         RadioChannelList.ItemsSource = RadioStations;
         RestoreWidgetSize();
         DockToDesktopCorner();
@@ -128,7 +129,9 @@ public partial class MainWindow : Window
             SourceStatus.Text = "SPECTRUM UNAVAILABLE";
             ToolTip = $"Spectrum analysis could not start: {ex.Message}";
         }
-        RestorePlaybackState();
+        if (Environment.GetEnvironmentVariable("WAVEPLAYER_RADIO_PREVIEW") == "1")
+            _ = StartRadioModeAsync();
+        else RestorePlaybackState();
     }
 
     private void NotifyAudioSignal()
@@ -138,8 +141,8 @@ public partial class MainWindow : Window
         Dispatcher.BeginInvoke(DispatcherPriority.Render, new Action(() =>
         {
             if (!IsLoaded || _spectrumThreadRunning == false) return;
-            SynthBackground.MotionEnabled = true;
-            if (PlaylistPopup.IsOpen) PlaylistBackground.MotionEnabled = true;
+            SynthBackground.MotionEnabled = !IsModernUi;
+            if (PlaylistPopup.IsOpen) PlaylistBackground.MotionEnabled = !IsModernUi;
             CompositionTarget.Rendering += OnCompositionRendering;
         }));
     }
@@ -169,8 +172,8 @@ public partial class MainWindow : Window
         // Consume only the newest completed spectrum and stop rendering after silence settles.
         var frameTime = ((RenderingEventArgs)e).RenderingTime;
         var active = SpectrumHasSignal;
-        SynthBackground.MotionEnabled = active;
-        if (PlaylistPopup.IsOpen) PlaylistBackground.MotionEnabled = active;
+        SynthBackground.MotionEnabled = active && !IsModernUi;
+        if (PlaylistPopup.IsOpen) PlaylistBackground.MotionEnabled = active && !IsModernUi;
         if (active)
         {
             lock (_spectrumLock)
@@ -288,6 +291,7 @@ public partial class MainWindow : Window
     private void PinButton_Click(object sender, RoutedEventArgs e)
     {
         _pinned = !_pinned;
+        _radioConcept?.UpdatePinState(_pinned);
         if (!_pinned) _dockToBottomRight = false;
         Topmost = _pinned;
         PinIcon.Opacity = _pinned ? 1 : .42;
@@ -298,10 +302,12 @@ public partial class MainWindow : Window
 
     private void SetPlayPauseState(bool playing)
     {
+        _radioConcept?.UpdatePlayback(playing, _radioOut is not null);
         PlayIcon.Visibility = playing ? Visibility.Collapsed : Visibility.Visible;
         PauseIcon.Visibility = playing ? Visibility.Visible : Visibility.Collapsed;
         PlayPauseButton.Tag = playing ? "Active" : null;
         PlayPauseButton.ToolTip = playing ? "Pause" : "Play";
+        if (!_radioActive) RefreshLocalConcept();
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e) => Close();
@@ -389,6 +395,7 @@ public partial class MainWindow : Window
         AlbumVolume.SetIdleVolume(_settings.Volume);
         RadioVolumeOverlay.SetIdleVolume(_settings.Volume);
         UpdateRemixDemoButton();
+        if (_windowReady) ApplyRadioLayout(_radioActive);
     }
 
     private void Shell_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -396,9 +403,8 @@ public partial class MainWindow : Window
         if (_editMode || _pinned) return;
         if (e.ButtonState == MouseButtonState.Pressed && !IsInteractiveControl(e.OriginalSource as DependencyObject))
         {
-            var start = new Point(Left, Top);
-            try { DragMove(); } catch (InvalidOperationException) { }
-            if (Math.Abs(Left - start.X) + Math.Abs(Top - start.Y) > 1) _dockToBottomRight = false;
+            BeginSmoothDrag();
+            e.Handled = true;
         }
     }
 

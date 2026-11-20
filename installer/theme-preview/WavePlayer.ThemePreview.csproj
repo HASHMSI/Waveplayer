@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>WavePlayer.ThemePreview</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <Resource Include="../../src/SynthwaveNowPlaying/Assets/WavePlayer.ico" Link="Assets/WavePlayer.ico" />
+    <Resource Include="Assets/*.jpg" />
+  </ItemGroup>
+</Project>

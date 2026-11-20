@@ -1,6 +1,10 @@
 ﻿using System.Configuration;
 using System.Data;
 using System.Windows;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
+using WavePlayer.ThemePreview;
 
 namespace SynthwaveNowPlaying;
 
@@ -25,7 +29,9 @@ public partial class App : System.Windows.Application
             // Reopening the shortcut restores the hidden player instead of
             // creating a second audio engine and notification icon.
             var identity = System.Security.Principal.WindowsIdentity.GetCurrent().User!.Value;
-            var name = @"Local\WavePlayer-" + identity + (LabData.Isolated ? "-AutoDjLab" : "");
+            var labSuffix = LabData.Isolated ? "-" + Convert.ToHexString(
+                SHA256.HashData(Encoding.UTF8.GetBytes(Path.GetFullPath(LabData.DataDirectory).ToUpperInvariant())))[..8] : "";
+            var name = @"Local\WavePlayer-" + identity + labSuffix;
             _restoreSignal = new EventWaitHandle(false, EventResetMode.AutoReset, name + "-restore");
             _previewSignal = new EventWaitHandle(false, EventResetMode.AutoReset, name + "-mixpreview");
             _instance = new Mutex(true, name, out _ownsInstance);
@@ -33,6 +39,16 @@ public partial class App : System.Windows.Application
             {
                 if (e.Args.Contains("--preview-automix")) _previewSignal.Set(); else _restoreSignal.Set();
                 Shutdown(); return;
+            }
+            var settings = AppSettings.Load();
+            if (!settings.ThemeChoiceMade)
+            {
+                ShutdownMode = ShutdownMode.OnExplicitShutdown;
+                var chooser = new ThemeWindow(settings.UiStyle == "Modern80s");
+                if (chooser.ShowDialog() != true) { Shutdown(); return; }
+                settings.UiStyle = chooser.SelectedStyle;
+                settings.ThemeChoiceMade = true;
+                settings.Save();
             }
             MainWindow = new MainWindow();
             ((MainWindow)MainWindow).InitializeTray();
@@ -51,6 +67,7 @@ public partial class App : System.Windows.Application
             else _ = UpdateClient.CleanupStaleHelpersAsync();
         }
         MainWindow.Show();
+        ShutdownMode = ShutdownMode.OnMainWindowClose;
         if (e.Args.Contains("--preview-automix") && MainWindow is MainWindow player) player.PreviewMixOverlay();
     }
 

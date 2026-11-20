@@ -25,6 +25,7 @@ internal sealed partial class SettingsWindow
     private FrameworkElement BuildAppearancePage()
     {
         var page = new StackPanel();
+        page.Children.Add(BuildUiStyleCard());
         var preset = BuildAppearanceCard();
         preset.Margin = new Thickness(0, 0, 0, 15);
         page.Children.Add(preset);

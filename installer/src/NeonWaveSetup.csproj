@@ -15,6 +15,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Resource Include="$(ApplicationIcon)" Link="Assets\WavePlayer.ico" />
+    <Page Include="..\theme-preview\ThemeWindow.xaml" Link="ThemeWindow.xaml" />
+    <Compile Include="..\theme-preview\ThemeWindow.xaml.cs" Link="ThemeWindow.xaml.cs" />
+    <Resource Include="..\theme-preview\Assets\*.jpg" Link="Assets\%(Filename)%(Extension)" />
     <Compile Include="..\..\src\SynthwaveNowPlaying\Visuals\SpectrumView.cs" Link="SpectrumView.cs" />
     <Compile Include="..\..\src\SynthwaveNowPlaying\Classic\ArchivedVisualizer.cs" Link="ArchivedVisualizer.cs" />
     <Compile Include="..\..\src\SynthwaveNowPlaying\Settings\SpectrumLab.xaml.cs" Link="SpectrumLab.cs" />

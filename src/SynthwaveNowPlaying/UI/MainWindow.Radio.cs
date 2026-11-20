@@ -46,6 +46,7 @@ public partial class MainWindow
         var station = RadioStations.FirstOrDefault(candidate => candidate.Id == id);
         if (station is null || station.Id == _radioStation) { ClosePlaylistAnimated(); return; }
         _radioStation = station.Id;
+        UpdateRadioConceptStation();
         RadioStationTitle.Text = station.Name.ToUpperInvariant() + " FM";
         RadioLiveLabel.Text = $"●  LIVE  ·  {station.Name.ToUpperInvariant()} FM  ·  NIGHTRIDE.FM";
         ClosePlaylistAnimated();
@@ -131,6 +132,7 @@ public partial class MainWindow
         var generation = ++_radioGeneration;
         _radioCancel = new CancellationTokenSource();
         SourceStatus.Text = "RADIO · CONNECTING";
+        _radioConcept?.SetStatus("TUNING", "CONNECTING");
         SetPlayPauseState(false);
         _ = FollowRadioMetadataAsync(generation, _radioCancel.Token);
         MediaFoundationReader? reader = null;
@@ -151,6 +153,7 @@ public partial class MainWindow
             reader = null;
             output.Play();
             SourceStatus.Text = "RADIO · ON AIR";
+            _radioConcept?.SetStatus("LIVE", "LIVE STREAM");
             SetPlayPauseState(true);
         }
         catch (Exception ex)
@@ -163,6 +166,7 @@ public partial class MainWindow
             _radioReader?.Dispose();
             _radioReader = null;
             SourceStatus.Text = "RADIO UNAVAILABLE";
+            _radioConcept?.SetStatus("OFFLINE", "TAP PLAY TO RETRY");
             ToolTip = ex.Message;
             SetPlayPauseState(false);
         }
@@ -200,6 +204,7 @@ public partial class MainWindow
                             if (!_radioActive || generation != _radioGeneration) return;
                             TrackTitle.Text = title;
                             ArtistName.Text = string.IsNullOrWhiteSpace(artist) ? "Nightride FM" : artist;
+                            _radioConcept?.UpdateTrack(string.IsNullOrWhiteSpace(artist) ? title : $"{artist} — {title}");
                         });
                     }
                 }
@@ -246,11 +251,22 @@ public partial class MainWindow
     private void SetRadioLayout(bool radio)
     {
         var generation = ++_radioLayoutGeneration;
+        if (_radioConcept is not null && IsModernUi)
+        {
+            ClosePlaylistAnimated();
+            _radioConcept.TransitionMode(() =>
+            {
+                if (generation == _radioLayoutGeneration && IsLoaded) ApplyRadioLayout(radio);
+            });
+            return;
+        }
+        bool applied = false;
         var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(150))
         { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn } };
         fadeOut.Completed += (_, _) =>
         {
-            if (generation != _radioLayoutGeneration || !IsLoaded) return;
+            if (applied || generation != _radioLayoutGeneration || !IsLoaded) return;
+            applied = true;
             ApplyRadioLayout(radio);
             var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(340))
             { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
@@ -294,5 +310,6 @@ public partial class MainWindow
         RadioToggleButton.Tag = radio ? "Active" : null;
         RadioToggleButton.ToolTip = radio ? "Return to local music" : "Play Chillsynth FM · Nightride FM";
         BrandTagline.Text = radio ? "  •  ON AIR" : "  •  STEREO FM 84";
+        ApplyUiStyle();
     }
 }
