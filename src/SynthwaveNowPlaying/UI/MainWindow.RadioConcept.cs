@@ -60,6 +60,9 @@ public partial class MainWindow
         _archived.View.Margin=Spectrum.Margin;
         _radioConcept.SetMode(show);
         BasePlayerChrome.Visibility=Visibility.Collapsed;
+        SynthBackground.Visibility=Visibility.Collapsed;
+        SynthBackground.MotionEnabled=false;
+        PlaylistBackground.MotionEnabled=false;
         _radioConcept.Visibility=Visibility.Visible;
         PlaylistPullButton.Background=new SolidColorBrush(Color.FromRgb(46,43,78));
         PlaylistPullButton.Foreground=new SolidColorBrush(Color.FromRgb(220,211,244));

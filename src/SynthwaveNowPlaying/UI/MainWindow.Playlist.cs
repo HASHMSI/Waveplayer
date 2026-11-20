@@ -237,7 +237,7 @@ public partial class MainWindow : Window
         ResizePlaylistPanel();
         PlaylistBackground.Theme = _settings.Background;
         PlaylistBackground.ApplyAlbumPalette(_displayPalette.Primary, _displayPalette.Secondary, TimeSpan.Zero);
-        PlaylistBackground.MotionEnabled = SpectrumHasSignal;
+        PlaylistBackground.MotionEnabled = SpectrumHasSignal && _radioConcept is null;
         PlaylistBackground.InvalidateVisual();
         SetPullArrow("⌄");
         PlaylistPanel.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(240))

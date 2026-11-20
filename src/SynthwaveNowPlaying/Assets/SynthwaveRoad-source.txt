@@ -5,3 +5,4 @@ Original download supplied by the user: 202825-919000184.mp4
 Imported: 2026-11-20
 License page: https://pixabay.com/service/license-summary/
 Local preview asset; the original downloaded file is unchanged.
+Widget copy optimized to a centered 960x326 crop, H.264, 30 fps, no audio.

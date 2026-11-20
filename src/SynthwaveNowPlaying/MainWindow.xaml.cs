@@ -140,8 +140,8 @@ public partial class MainWindow : Window
         Dispatcher.BeginInvoke(DispatcherPriority.Render, new Action(() =>
         {
             if (!IsLoaded || _spectrumThreadRunning == false) return;
-            SynthBackground.MotionEnabled = true;
-            if (PlaylistPopup.IsOpen) PlaylistBackground.MotionEnabled = true;
+            SynthBackground.MotionEnabled = _radioConcept is null;
+            if (PlaylistPopup.IsOpen) PlaylistBackground.MotionEnabled = _radioConcept is null;
             CompositionTarget.Rendering += OnCompositionRendering;
         }));
     }
@@ -171,8 +171,8 @@ public partial class MainWindow : Window
         // Consume only the newest completed spectrum and stop rendering after silence settles.
         var frameTime = ((RenderingEventArgs)e).RenderingTime;
         var active = SpectrumHasSignal;
-        SynthBackground.MotionEnabled = active;
-        if (PlaylistPopup.IsOpen) PlaylistBackground.MotionEnabled = active;
+        SynthBackground.MotionEnabled = active && _radioConcept is null;
+        if (PlaylistPopup.IsOpen) PlaylistBackground.MotionEnabled = active && _radioConcept is null;
         if (active)
         {
             lock (_spectrumLock)

@@ -11,32 +11,41 @@ public partial class RadioConceptView : UserControl
     public RadioConceptView()
     {
         InitializeComponent();
-        Loaded += (_, _) => StartRoadVideo();
-        IsVisibleChanged += (_, _) =>
-        {
-            if (IsVisible) _roadClock?.Controller?.Resume();
-            else _roadClock?.Controller?.Pause();
-        };
-        Unloaded += (_, _) =>
-        {
-            _roadClock?.Controller?.Stop();
-            RoadVideo.Clock = null;
-            _roadClock = null;
-        };
+        Loaded += (_, _) => { StartRoadVideo(); StartRenderProbe(); };
     }
-    private MediaClock? _roadClock;
+    private void StartRenderProbe()
+    {
+        var destination=Environment.GetEnvironmentVariable("WAVEPLAYER_RENDER_PROBE");
+        if (string.IsNullOrEmpty(destination)) return;
+        var elapsed=System.Diagnostics.Stopwatch.StartNew();
+        var intervals=new List<double>();
+        TimeSpan? last=null;
+        EventHandler frame=(_,args)=>
+        {
+            var time=((RenderingEventArgs)args).RenderingTime;
+            if(last is {} prior && time>prior) intervals.Add((time-prior).TotalMilliseconds);
+            last=time;
+        };
+        CompositionTarget.Rendering+=frame;
+        var timer=new System.Windows.Threading.DispatcherTimer { Interval=TimeSpan.FromSeconds(9) };
+        timer.Tick+=(_,_)=>
+        {
+            timer.Stop(); CompositionTarget.Rendering-=frame;
+            var ordered=intervals.Order().ToArray();
+            if(ordered.Length==0)return;
+            System.IO.File.WriteAllText(destination,System.Text.Json.JsonSerializer.Serialize(new {
+                Frames=ordered.Length,Seconds=elapsed.Elapsed.TotalSeconds,
+                AverageIntervalMs=ordered.Average(),P95IntervalMs=ordered[(int)((ordered.Length-1)*.95)],
+                StallsOver50ms=ordered.Count(x=>x>50),RenderTier=RenderCapability.Tier>>16
+            }));
+        };
+        timer.Start();
+    }
     private void StartRoadVideo()
     {
-        if (_roadClock is not null) return;
-        var path=System.IO.Path.Combine(AppContext.BaseDirectory,"Assets","SynthwaveRoad.mp4");
-        if (!System.IO.File.Exists(path)) return;
-        // A repeating media clock owns the loop, with no UI polling timer.
-        var timeline=new MediaTimeline(new Uri(path)) { RepeatBehavior=RepeatBehavior.Forever };
-        _roadClock=(MediaClock)timeline.CreateClock(true);
-        RoadVideo.Clock=_roadClock;
-        RoadVideo.IsMuted=true;
-        _roadClock.Controller?.Begin();
-        if (!IsVisible) _roadClock.Controller?.Pause();
+        if (Environment.GetEnvironmentVariable("WAVEPLAYER_DISABLE_VIDEO") == "1") return;
+        var path=System.IO.Path.Combine(SynthwaveNowPlaying.LabData.DataDirectory,"SynthwaveRoad-640x218.bgra");
+        if (RoadVideo.Open(path)) RoadVideo_Opened(this,new RoutedEventArgs());
     }
     private void ConsoleSurface_SizeChanged(object s, SizeChangedEventArgs e) =>
         ConsoleSurface.Clip=new RectangleGeometry(new Rect(e.NewSize),9,9);
@@ -45,15 +54,6 @@ public partial class RadioConceptView : UserControl
         Scenery.Visibility=Visibility.Collapsed;
         RoadVideo.BeginAnimation(OpacityProperty,new DoubleAnimation(0,1,TimeSpan.FromMilliseconds(800))
         { EasingFunction=new CubicEase { EasingMode=EasingMode.EaseOut } });
-    }
-    private void RoadVideo_Failed(object s, ExceptionRoutedEventArgs e)
-    {
-        RoadVideo.BeginAnimation(OpacityProperty,null);
-        RoadVideo.Opacity=0;
-        Scenery.Visibility=Visibility.Visible;
-        _roadClock?.Controller?.Stop();
-        RoadVideo.Clock=null;
-        _roadClock=null;
     }
     private int _transitionVersion;
     private bool _radioMode;
@@ -134,8 +134,17 @@ public partial class RadioConceptView : UserControl
         LiveBadge.Visibility=radio?Visibility.Visible:Visibility.Collapsed;
         Format.Visibility=FooterStatus.Visibility=Favorite.Visibility=FormatDivider.Visibility=StatusDivider.Visibility=radio?Visibility.Visible:Visibility.Collapsed;
         SeekHost.Visibility=Eq.Visibility=Remix.Visibility=radio?Visibility.Collapsed:Visibility.Visible;
-        SpectrumHost.BeginAnimation(MarginProperty,new ThicknessAnimation(
-            origin,target,TimeSpan.FromMilliseconds(440))
+        // Animate pixels, not layout: a Margin animation would remeasure the
+        // entire player (including the video and spectrum) on every UI frame.
+        var width=Math.Max(1,Hero.ActualWidth-target.Left-target.Right);
+        var oldWidth=Math.Max(1,Hero.ActualWidth-origin.Left-origin.Right);
+        var stretch=new ScaleTransform(oldWidth/width,1);
+        var slide=new TranslateTransform(origin.Left-target.Left,0);
+        SpectrumHost.RenderTransformOrigin=new Point(0,.5);
+        SpectrumHost.RenderTransform=new TransformGroup {Children={stretch,slide}};
+        stretch.BeginAnimation(ScaleTransform.ScaleXProperty,new DoubleAnimation(stretch.ScaleX,1,TimeSpan.FromMilliseconds(440))
+            {EasingFunction=new QuarticEase {EasingMode=EasingMode.EaseOut}});
+        slide.BeginAnimation(TranslateTransform.XProperty,new DoubleAnimation(slide.X,0,TimeSpan.FromMilliseconds(440))
             {EasingFunction=new QuarticEase {EasingMode=EasingMode.EaseOut}});
         CoverHost.BeginAnimation(OpacityProperty,new DoubleAnimation(0,1,TimeSpan.FromMilliseconds(380)));
     }

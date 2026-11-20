@@ -40,6 +40,7 @@ public sealed class MarqueeText : Control
         ClipToBounds = true;
         Loaded += (_, _) => Refresh();
         Unloaded += (_, _) => Stop();
+        IsVisibleChanged += (_, _) => { if (IsVisible) Refresh(); else Stop(); };
         SizeChanged += (_, _) => Refresh();
     }
 
@@ -72,7 +73,7 @@ public sealed class MarqueeText : Control
     private void Refresh()
     {
         _formatted = null;
-        if (!IsLoaded || ActualWidth <= 0) return;
+        if (!IsLoaded || !IsVisible || ActualWidth <= 0) return;
         var textWidth = Format().WidthIncludingTrailingWhitespace;
         var viewport = ActualWidth;
         if (textWidth <= viewport + 2) { Stop(); return; }

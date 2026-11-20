@@ -35,7 +35,7 @@
  <Border CornerRadius="10" BorderThickness=".7" BorderBrush="#777E87B8" Background="#FF101329" Padding="1">
   <Grid x:Name="ConsoleSurface" ClipToBounds="True" SizeChanged="ConsoleSurface_SizeChanged">
    <Grid.RowDefinitions><RowDefinition Height="23"/><RowDefinition Height="*"/><RowDefinition Height="27"/></Grid.RowDefinitions>
-   <MediaElement x:Name="RoadVideo" Grid.RowSpan="3" IsHitTestVisible="False" Stretch="UniformToFill" IsMuted="True" Volume="0" Opacity="0" MediaOpened="RoadVideo_Opened" MediaFailed="RoadVideo_Failed"/>
+   <local:LoopVideoView x:Name="RoadVideo" Grid.RowSpan="3" IsHitTestVisible="False" Opacity="0"/>
    <Border Grid.RowSpan="3" IsHitTestVisible="False">
     <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="0,1"><GradientStop Color="#B510112B" Offset="0"/><GradientStop Color="#6910112B" Offset=".42"/><GradientStop Color="#A510112B" Offset="1"/></LinearGradientBrush></Border.Background>
    </Border>
