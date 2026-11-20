@@ -37,7 +37,36 @@ public partial class RadioConceptView : UserControl
     private void Previous_Click(object s, RoutedEventArgs e) => Previous?.Invoke();
     private void Next_Click(object s, RoutedEventArgs e) => Next?.Invoke();
     private void Play_Click(object s, RoutedEventArgs e) => Play?.Invoke();
-    private void Favorite_Click(object s, RoutedEventArgs e) => FavoriteRequested?.Invoke();
+    private void Favorite_Click(object s, RoutedEventArgs e)
+    {
+        FavoriteRequested?.Invoke();
+        Favorite.ApplyTemplate();
+        if (Favorite.Template.FindName("HeartPulse", Favorite) is FrameworkElement pulse &&
+            pulse.RenderTransform is ScaleTransform scale)
+        {
+            // WPF may freeze transforms shared by a control template.
+            // Give this button an editable instance before attaching clocks.
+            if (scale.IsFrozen) { scale = scale.Clone(); pulse.RenderTransform = scale; }
+            // Replace the active clock on rapid clicks; never accumulate timers.
+            var bounce = new DoubleAnimationUsingKeyFrames { Duration = TimeSpan.FromMilliseconds(430), FillBehavior = FillBehavior.Stop };
+            bounce.KeyFrames.Add(new EasingDoubleKeyFrame(.84, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+            bounce.KeyFrames.Add(new EasingDoubleKeyFrame(_favorite ? 1.24 : 1.1, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(130)), new CubicEase { EasingMode = EasingMode.EaseOut }));
+            bounce.KeyFrames.Add(new EasingDoubleKeyFrame(.97, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(290)), new SineEase { EasingMode = EasingMode.EaseInOut }));
+            bounce.KeyFrames.Add(new EasingDoubleKeyFrame(1, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(430)), new SineEase { EasingMode = EasingMode.EaseOut }));
+            scale.BeginAnimation(ScaleTransform.ScaleXProperty, bounce);
+            scale.BeginAnimation(ScaleTransform.ScaleYProperty, bounce);
+        }
+        if (Favorite.Template.FindName("HeartRing", Favorite) is FrameworkElement ring &&
+            ring.RenderTransform is ScaleTransform ringScale)
+        {
+            if (ringScale.IsFrozen) { ringScale = ringScale.Clone(); ring.RenderTransform = ringScale; }
+            var expand = new DoubleAnimation(.45, 1.35, TimeSpan.FromMilliseconds(440))
+            { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }, FillBehavior = FillBehavior.Stop };
+            ringScale.BeginAnimation(ScaleTransform.ScaleXProperty, expand);
+            ringScale.BeginAnimation(ScaleTransform.ScaleYProperty, expand);
+            ring.BeginAnimation(OpacityProperty, new DoubleAnimation(_favorite ? .65 : .3, 0, TimeSpan.FromMilliseconds(440)) { FillBehavior = FillBehavior.Stop });
+        }
+    }
     private void Eq_Click(object s, RoutedEventArgs e) => EqRequested?.Invoke();
     private void EqReset_Click(object s, RoutedEventArgs e) => EqResetRequested?.Invoke();
     private void Remix_Click(object s, RoutedEventArgs e) => RemixRequested?.Invoke();
@@ -64,7 +93,17 @@ public partial class RadioConceptView : UserControl
             {EasingFunction=new QuarticEase {EasingMode=EasingMode.EaseOut}});
         CoverHost.BeginAnimation(OpacityProperty,new DoubleAnimation(0,1,TimeSpan.FromMilliseconds(380)));
     }
-    public void SetFavorite(bool favorite) => Favorite.Content = favorite ? "♥" : "♡";
+    private bool _favorite;
+    public void SetFavorite(bool favorite)
+    {
+        _favorite = favorite;
+        Favorite.Content = favorite ? "♥" : "♡";
+        Favorite.ToolTip = favorite ? "Remove from favorites" : "Favorite channel";
+        var target = favorite ? Color.FromRgb(255, 142, 173) : Color.FromRgb(226, 177, 199);
+        var brush = new SolidColorBrush((Favorite.Foreground as SolidColorBrush)?.Color ?? target);
+        Favorite.Foreground = brush;
+        brush.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation(target, TimeSpan.FromMilliseconds(240)));
+    }
     public void UpdateTrack(string text)
     {
         if(Metadata.Text==text)return;

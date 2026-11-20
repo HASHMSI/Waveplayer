@@ -90,7 +90,12 @@
     </Grid>
     <Button x:Name="Favorite" HorizontalAlignment="Right" VerticalAlignment="Center" Width="25" Height="20" Content="♡" FontSize="16" Foreground="#FF9DAB" BorderBrush="Transparent" Background="Transparent" FocusVisualStyle="{x:Null}" Click="Favorite_Click" ToolTip="Favorite channel">
      <Button.Template><ControlTemplate TargetType="Button">
-      <Grid Background="Transparent"><ContentPresenter x:Name="Heart" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin=".5,.5"><ContentPresenter.RenderTransform><ScaleTransform/></ContentPresenter.RenderTransform></ContentPresenter></Grid>
+      <Grid Background="Transparent">
+       <Ellipse x:Name="HeartRing" Width="16" Height="16" Stroke="#FFACBD" StrokeThickness=".8" Opacity="0" IsHitTestVisible="False" RenderTransformOrigin=".5,.5"><Ellipse.RenderTransform><ScaleTransform/></Ellipse.RenderTransform></Ellipse>
+       <Grid x:Name="HeartPulse" RenderTransformOrigin=".5,.5"><Grid.RenderTransform><ScaleTransform/></Grid.RenderTransform>
+        <ContentPresenter x:Name="Heart" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin=".5,.5"><ContentPresenter.RenderTransform><ScaleTransform/></ContentPresenter.RenderTransform></ContentPresenter>
+       </Grid>
+      </Grid>
       <ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True">
        <Setter Property="Foreground" Value="#FFD0DA"/>
        <Trigger.EnterActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="Heart" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="1.12" Duration="0:0:.15"/><DoubleAnimation Storyboard.TargetName="Heart" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="1.12" Duration="0:0:.15"/></Storyboard></BeginStoryboard></Trigger.EnterActions>
