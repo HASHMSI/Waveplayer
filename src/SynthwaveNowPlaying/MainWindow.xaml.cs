@@ -69,6 +69,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        InitializeSmoothDrag();
         if (LabData.Isolated) Title = "WavePlayer · Radio Concept Preview";
         RadioChannelList.ItemsSource = RadioStations;
         RestoreWidgetSize();
@@ -290,6 +291,7 @@ public partial class MainWindow : Window
     private void PinButton_Click(object sender, RoutedEventArgs e)
     {
         _pinned = !_pinned;
+        _radioConcept?.UpdatePinState(_pinned);
         if (!_pinned) _dockToBottomRight = false;
         Topmost = _pinned;
         PinIcon.Opacity = _pinned ? 1 : .42;
@@ -400,9 +402,8 @@ public partial class MainWindow : Window
         if (_editMode || _pinned) return;
         if (e.ButtonState == MouseButtonState.Pressed && !IsInteractiveControl(e.OriginalSource as DependencyObject))
         {
-            var start = new Point(Left, Top);
-            try { DragMove(); } catch (InvalidOperationException) { }
-            if (Math.Abs(Left - start.X) + Math.Abs(Top - start.Y) > 1) _dockToBottomRight = false;
+            BeginSmoothDrag();
+            e.Handled = true;
         }
     }
 

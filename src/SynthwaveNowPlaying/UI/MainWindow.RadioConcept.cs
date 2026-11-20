@@ -59,6 +59,8 @@ public partial class MainWindow
         Spectrum.Margin=new Thickness(2,show?36:42,2,0);
         _archived.View.Margin=Spectrum.Margin;
         _radioConcept.SetMode(show);
+        _radioConcept.UpdatePinState(_pinned);
+        _radioConcept.ApplyVideoPalette(_activePalette.Primary,_activePalette.Secondary);
         BasePlayerChrome.Visibility=Visibility.Collapsed;
         SynthBackground.Visibility=Visibility.Collapsed;
         SynthBackground.MotionEnabled=false;

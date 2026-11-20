@@ -56,6 +56,31 @@ public partial class RadioConceptView : UserControl
         { EasingFunction=new CubicEase { EasingMode=EasingMode.EaseOut } });
     }
     private int _transitionVersion;
+    public void UpdatePinState(bool pinned)
+    {
+        PinControl.ToolTip=pinned?"Pinned · click to unlock movement":"Unpinned · drag to move";
+        PinGlyph.Opacity=pinned?1:.5;
+    }
+    private Color? _videoPrimary, _videoSecondary;
+    public void ApplyVideoPalette(Color primary,Color secondary)
+    {
+        if(primary==_videoPrimary&&secondary==_videoSecondary)return;
+        _videoPrimary=primary;_videoSecondary=secondary;
+        var tint=(LinearGradientBrush)VideoPaletteTint.Background;
+        if(tint.IsFrozen)
+        {
+            tint=tint.Clone();
+            VideoPaletteTint.Background=tint;
+        }
+        // A compositor tint preserves the decoded frames and their cache.
+        // Palette work happens once per artwork, not once per video frame.
+        tint.GradientStops[0].BeginAnimation(GradientStop.ColorProperty,new ColorAnimation(
+            Color.FromArgb(190,primary.R,primary.G,primary.B),TimeSpan.FromMilliseconds(620))
+            {EasingFunction=new CubicEase {EasingMode=EasingMode.EaseOut}});
+        tint.GradientStops[1].BeginAnimation(GradientStop.ColorProperty,new ColorAnimation(
+            Color.FromArgb(165,secondary.R,secondary.G,secondary.B),TimeSpan.FromMilliseconds(620))
+            {EasingFunction=new CubicEase {EasingMode=EasingMode.EaseOut}});
+    }
     private bool _radioMode;
     public void TransitionMode(Action apply)
     {

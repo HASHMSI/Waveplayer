@@ -36,6 +36,9 @@
   <Grid x:Name="ConsoleSurface" ClipToBounds="True" SizeChanged="ConsoleSurface_SizeChanged">
    <Grid.RowDefinitions><RowDefinition Height="23"/><RowDefinition Height="*"/><RowDefinition Height="27"/></Grid.RowDefinitions>
    <local:LoopVideoView x:Name="RoadVideo" Grid.RowSpan="3" IsHitTestVisible="False" Opacity="0"/>
+   <Border x:Name="VideoPaletteTint" Grid.RowSpan="3" IsHitTestVisible="False" Opacity=".34">
+    <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop x:Name="VideoPrimary" Color="#B54D3059" Offset="0"/><GradientStop x:Name="VideoSecondary" Color="#A5252D52" Offset="1"/></LinearGradientBrush></Border.Background>
+   </Border>
    <Border Grid.RowSpan="3" IsHitTestVisible="False">
     <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="0,1"><GradientStop Color="#B510112B" Offset="0"/><GradientStop Color="#6910112B" Offset=".42"/><GradientStop Color="#A510112B" Offset="1"/></LinearGradientBrush></Border.Background>
    </Border>
@@ -51,7 +54,7 @@
      <Button x:Name="Eq" Visibility="Collapsed" Width="22" Height="17" Margin="0,0,4,0" Click="Eq_Click" ToolTip="Edit EQ"><TextBlock Text="EQ" FontSize="6" FontWeight="Bold"/></Button>
      <Button x:Name="EqReset" Visibility="Collapsed" Width="18" Height="17" Margin="0,0,4,0" Click="EqReset_Click" ToolTip="Reset EQ"><Path Data="M10,4 A4,4 0 1 0 10,9 M10,4 L10,1 M10,4 L7,4" Stroke="#CDE8EB" StrokeThickness="1" Width="10" Height="10" Stretch="Uniform"/></Button>
      <Button x:Name="Remix" Visibility="Collapsed" Width="37" Height="17" Margin="0,0,4,0" Click="Remix_Click" ToolTip="Toggle Automix"><TextBlock x:Name="RemixLabel" Text="REMIX" FontSize="6" FontWeight="Bold"/></Button>
-     <Button Width="21" Height="17" Margin="0,0,4,0" Click="Pin_Click" ToolTip="Pin or unlock widget">
+     <Button x:Name="PinControl" Width="21" Height="17" Margin="0,0,4,0" Click="Pin_Click" ToolTip="Pin or unlock widget">
       <Path x:Name="PinGlyph" Data="M10,1 L15,6 12,7 9,11 7,9 2,15 1,14 6,8 4,6 8,3 Z" Stroke="#E9E1FF" StrokeThickness="1.15" StrokeLineJoin="Round" Width="12" Height="12" Stretch="Uniform"/>
      </Button>
      <Button Width="21" Height="17" Margin="0,0,4,0" Click="Settings_Click" ToolTip="Settings" AutomationProperties.Name="Settings">

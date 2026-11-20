@@ -24,6 +24,7 @@ public partial class MainWindow : Window
         if (_hasActivePalette && palette == _activePalette) return;
         _activePalette = palette;
         _hasActivePalette = true;
+        _radioConcept?.ApplyVideoPalette(palette.Primary,palette.Secondary);
         _fadeStartPalette = _displayPalette;
         _paletteFadeStarted = DateTime.UtcNow;
         if (!_paletteRendering)
