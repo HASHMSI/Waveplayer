@@ -47,16 +47,20 @@ public partial class RadioConceptView : UserControl
         EqReset.Visibility=Visibility.Collapsed;
         ModeLabel.Text=radio?" / RADIO":"";
         CoverHost.Visibility=radio?Visibility.Collapsed:Visibility.Visible;
-        SpectrumHost.Margin=radio?new Thickness(2,0,2,0):new Thickness(92,0,5,0);
+        // Clear the previous mode's held animation before reading the new target.
+        // Otherwise WPF returns the old animated margin (92 px) in radio mode.
+        var target=radio?new Thickness(2,0,2,0):new Thickness(92,0,5,0);
+        var origin=SpectrumHost.Margin;
+        SpectrumHost.BeginAnimation(MarginProperty,null);
+        SpectrumHost.Margin=target;
         MetadataPanel.Margin=radio?new Thickness(13,5,70,0):new Thickness(96,7,8,0);
         NowLabel.Text=radio?"NOW ON AIR":"LOCAL LIBRARY";
         Station.FontSize=radio?16:13;
         LiveBadge.Visibility=radio?Visibility.Visible:Visibility.Collapsed;
         Format.Visibility=FooterStatus.Visibility=Favorite.Visibility=FormatDivider.Visibility=StatusDivider.Visibility=radio?Visibility.Visible:Visibility.Collapsed;
         SeekHost.Visibility=Eq.Visibility=Remix.Visibility=radio?Visibility.Collapsed:Visibility.Visible;
-        var target=SpectrumHost.Margin;
         SpectrumHost.BeginAnimation(MarginProperty,new ThicknessAnimation(
-            radio?new Thickness(72,0,5,0):new Thickness(58,0,5,0),target,TimeSpan.FromMilliseconds(440))
+            origin,target,TimeSpan.FromMilliseconds(440))
             {EasingFunction=new QuarticEase {EasingMode=EasingMode.EaseOut}});
         CoverHost.BeginAnimation(OpacityProperty,new DoubleAnimation(0,1,TimeSpan.FromMilliseconds(380)));
     }

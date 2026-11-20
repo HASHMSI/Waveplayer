@@ -88,7 +88,16 @@
      <Grid x:Name="SeekSliderHost"/>
      <TextBlock x:Name="Elapsed" Grid.Column="1" Text="0:00" FontSize="7" Foreground="#D7D5EB" VerticalAlignment="Center" HorizontalAlignment="Right"/>
     </Grid>
-    <Button x:Name="Favorite" HorizontalAlignment="Right" VerticalAlignment="Center" Width="25" Height="20" Content="♡" FontSize="16" Foreground="#FF9DAB" BorderBrush="Transparent" Background="Transparent" Click="Favorite_Click" ToolTip="Favorite channel"/>
+    <Button x:Name="Favorite" HorizontalAlignment="Right" VerticalAlignment="Center" Width="25" Height="20" Content="♡" FontSize="16" Foreground="#FF9DAB" BorderBrush="Transparent" Background="Transparent" FocusVisualStyle="{x:Null}" Click="Favorite_Click" ToolTip="Favorite channel">
+     <Button.Template><ControlTemplate TargetType="Button">
+      <Grid Background="Transparent"><ContentPresenter x:Name="Heart" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin=".5,.5"><ContentPresenter.RenderTransform><ScaleTransform/></ContentPresenter.RenderTransform></ContentPresenter></Grid>
+      <ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True">
+       <Setter Property="Foreground" Value="#FFD0DA"/>
+       <Trigger.EnterActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="Heart" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="1.12" Duration="0:0:.15"/><DoubleAnimation Storyboard.TargetName="Heart" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="1.12" Duration="0:0:.15"/></Storyboard></BeginStoryboard></Trigger.EnterActions>
+       <Trigger.ExitActions><BeginStoryboard><Storyboard><DoubleAnimation Storyboard.TargetName="Heart" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="1" Duration="0:0:.18"/><DoubleAnimation Storyboard.TargetName="Heart" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="1" Duration="0:0:.18"/></Storyboard></BeginStoryboard></Trigger.ExitActions>
+      </Trigger></ControlTemplate.Triggers>
+     </ControlTemplate></Button.Template>
+    </Button>
    </Grid>
   </Grid>
  </Border>
