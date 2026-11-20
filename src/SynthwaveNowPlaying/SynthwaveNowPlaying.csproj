@@ -17,6 +17,7 @@
   <ItemGroup>
     <Resource Include="$(ApplicationIcon)" />
     <Resource Include="Assets\AutomixDisc.png" />
+    <Content Include="Assets\SynthwaveRoad.mp4" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Page Remove="Settings\SpectrumLab.xaml" />
     <EmbeddedResource Include="Settings\SpectrumLab.xaml" LogicalName="Settings.SpectrumLab.xaml" />
     <Content Include="Classic\SynthwaveNowPlaying.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />

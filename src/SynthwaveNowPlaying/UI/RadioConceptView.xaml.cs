@@ -8,7 +8,53 @@ namespace SynthwaveNowPlaying.UI;
 public partial class RadioConceptView : UserControl
 {
     public event Action? Local, Pin, Settings, Hide, Previous, Next, Play, FavoriteRequested, EqRequested, EqResetRequested, RemixRequested;
-    public RadioConceptView() => InitializeComponent();
+    public RadioConceptView()
+    {
+        InitializeComponent();
+        Loaded += (_, _) => StartRoadVideo();
+        IsVisibleChanged += (_, _) =>
+        {
+            if (IsVisible) _roadClock?.Controller?.Resume();
+            else _roadClock?.Controller?.Pause();
+        };
+        Unloaded += (_, _) =>
+        {
+            _roadClock?.Controller?.Stop();
+            RoadVideo.Clock = null;
+            _roadClock = null;
+        };
+    }
+    private MediaClock? _roadClock;
+    private void StartRoadVideo()
+    {
+        if (_roadClock is not null) return;
+        var path=System.IO.Path.Combine(AppContext.BaseDirectory,"Assets","SynthwaveRoad.mp4");
+        if (!System.IO.File.Exists(path)) return;
+        // A repeating media clock owns the loop, with no UI polling timer.
+        var timeline=new MediaTimeline(new Uri(path)) { RepeatBehavior=RepeatBehavior.Forever };
+        _roadClock=(MediaClock)timeline.CreateClock(true);
+        RoadVideo.Clock=_roadClock;
+        RoadVideo.IsMuted=true;
+        _roadClock.Controller?.Begin();
+        if (!IsVisible) _roadClock.Controller?.Pause();
+    }
+    private void ConsoleSurface_SizeChanged(object s, SizeChangedEventArgs e) =>
+        ConsoleSurface.Clip=new RectangleGeometry(new Rect(e.NewSize),9,9);
+    private void RoadVideo_Opened(object s, RoutedEventArgs e)
+    {
+        Scenery.Visibility=Visibility.Collapsed;
+        RoadVideo.BeginAnimation(OpacityProperty,new DoubleAnimation(0,1,TimeSpan.FromMilliseconds(800))
+        { EasingFunction=new CubicEase { EasingMode=EasingMode.EaseOut } });
+    }
+    private void RoadVideo_Failed(object s, ExceptionRoutedEventArgs e)
+    {
+        RoadVideo.BeginAnimation(OpacityProperty,null);
+        RoadVideo.Opacity=0;
+        Scenery.Visibility=Visibility.Visible;
+        _roadClock?.Controller?.Stop();
+        RoadVideo.Clock=null;
+        _roadClock=null;
+    }
     private int _transitionVersion;
     private bool _radioMode;
     public void TransitionMode(Action apply)
