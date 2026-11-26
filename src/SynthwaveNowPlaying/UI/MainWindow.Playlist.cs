@@ -63,7 +63,7 @@ public partial class MainWindow : Window
             else if (_activeQueueSourceId is not null)
             {
                 var queueSource = _playlistSources.FirstOrDefault(source => source.Id.Equals(_activeQueueSourceId, StringComparison.OrdinalIgnoreCase));
-                if (queueSource is not null) _activeQueue = queueSource.Files.ToList();
+                if (queueSource is not null) _activeQueue = CreatePlaybackQueue(queueSource.Files);
             }
             if (_localTrack is null || _waveOut is null)
                 SourceStatus.Text = _library.Count == 0 ? "NO AUDIO FILES FOUND" : $"LIBRARY · {_library.Count}";
@@ -134,6 +134,7 @@ public partial class MainWindow : Window
 
     private void PlaylistPullButton_Click(object sender, RoutedEventArgs e)
     {
+        if(_suppressPullClick){_suppressPullClick=false;return;}
         if (PlaylistPopup.IsOpen) ClosePlaylistAnimated();
         else PlaylistPopup.IsOpen = true;
     }
@@ -159,7 +160,7 @@ public partial class MainWindow : Window
     private void PlaylistTrackButton_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { Tag: PlaylistRow row }) return;
-        _activeQueue = row.Queue.ToList();
+        _activeQueue = CreatePlaybackQueue(row.Queue);
         _activeQueueSourceId = row.Source.Id;
         var index = _activeQueue.FindIndex(file => string.Equals(file, row.File, StringComparison.OrdinalIgnoreCase));
         PlayLibraryTrack(index);
@@ -218,7 +219,7 @@ public partial class MainWindow : Window
         GetPlaylistEdits(source.Id).Order = source.Files.ToList();
         if (string.Equals(_activeQueueSourceId, source.Id, StringComparison.OrdinalIgnoreCase))
         {
-            _activeQueue = source.Files.ToList();
+            _activeQueue = CreatePlaybackQueue(source.Files);
             if (AdaptiveWaiting) CancelDemoCrossfade();
             var currentIndex = _activeQueue.FindIndex(file => string.Equals(file, _localTrack, StringComparison.OrdinalIgnoreCase));
             if (_settings.RemixDemoEnabled && currentIndex >= 0) WarmTransitionAnalysis(currentIndex);

@@ -28,6 +28,7 @@ public partial class MainWindow
             _radioConcept.Pin += () => PinButton_Click(PinButton, new RoutedEventArgs());
             _radioConcept.Hide += () => CloseButton_Click(CloseControl, new RoutedEventArgs());
             _radioConcept.Play += () => PlayPauseButton_Click(PlayPauseButton, new RoutedEventArgs());
+            _radioConcept.ShuffleRequested+=()=>Shuffle_Click(ShuffleButton,new RoutedEventArgs());
             _radioConcept.Previous += () => { if (_radioActive) StepRadioChannel(-1); else PreviousButton_Click(PreviousControl,new RoutedEventArgs()); };
             _radioConcept.Next += () => { if (_radioActive) StepRadioChannel(1); else NextButton_Click(NextControl,new RoutedEventArgs()); };
             _radioConcept.FavoriteRequested += () => ToggleRadioFavorite(_radioStation);
@@ -64,6 +65,7 @@ public partial class MainWindow
         _archived.View.Margin=Spectrum.Margin;
         _radioConcept.SetMode(show);
         _radioConcept.UpdatePinState(_pinned);
+        _radioConcept.Shuffle.SetShuffleState(_settings.ShuffleEnabled);
         _radioConcept.ApplyVideoPalette(_activePalette.Primary,_activePalette.Secondary);
         BasePlayerChrome.Visibility=Visibility.Collapsed;
         SynthBackground.Visibility=Visibility.Collapsed;

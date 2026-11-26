@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Controls.Primitives;
 
 namespace SynthwaveNowPlaying;
 
@@ -13,9 +14,28 @@ public partial class MainWindow
     private CursorPoint _dragOrigin;
     private NativeRect _dragRect;
     private int _dragX, _dragY;
+    private Point? _pullDragOrigin;
+    private bool _suppressPullClick;
 
     private void InitializeSmoothDrag()
     {
+        PlaylistPullButton.PreviewMouseLeftButtonDown+=(_,e)=>
+        {
+            _pullDragOrigin=e.GetPosition(this);_suppressPullClick=false;
+        };
+        PlaylistPullButton.PreviewMouseMove+=(_,e)=>
+        {
+            if(_pullDragOrigin is not {} origin||e.LeftButton!=MouseButtonState.Pressed||_editMode)return;
+            var delta=e.GetPosition(this)-origin;
+            if(Math.Abs(delta.X)<SystemParameters.MinimumHorizontalDragDistance&&Math.Abs(delta.Y)<SystemParameters.MinimumVerticalDragDistance)return;
+            _pullDragOrigin=null;_suppressPullClick=true;
+            // Pull-strip drag is an explicit move gesture, including while pinned.
+            // A regular click still opens the library; dragging never opens it.
+            if(_pinned)PinButton_Click(PinButton,new RoutedEventArgs());
+            PlaylistPullButton.ReleaseMouseCapture();
+            BeginSmoothDrag();e.Handled=true;
+        };
+        PlaylistPullButton.PreviewMouseLeftButtonUp+=(_,_)=>_pullDragOrigin=null;
         Shell.MouseLeftButtonUp += (_,e) => { if(_smoothDragging){EndSmoothDrag();e.Handled=true;} };
         Shell.LostMouseCapture += (_,_) => EndSmoothDrag();
         Deactivated += (_,_) => EndSmoothDrag();

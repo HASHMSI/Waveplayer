@@ -31,12 +31,12 @@ public partial class MainWindow : Window
             item.Files.Contains(file, StringComparer.OrdinalIgnoreCase))
             ?? _playlistSources.FirstOrDefault(item => item.Files.Contains(file, StringComparer.OrdinalIgnoreCase));
         if (source is null) return;
-        _activeQueue = source.Files.ToList();
+        _activeQueue = CreatePlaybackQueue(source.Files);
         _activeQueueSourceId = source.Id;
         PlaylistSourcePicker.SelectedItem = source;
         var index = _activeQueue.FindIndex(item => string.Equals(item, file, StringComparison.OrdinalIgnoreCase));
         if (index < 0) return;
-        TryPlayLibraryTrack(index, _settings.LastPositionSeconds);
+        TryPlayLibraryTrack(index, _settings.LastPositionSeconds, !StartedAtWindowsLogon);
     }
 
     // Only the local NAudio playback chain receives EQ changes.
@@ -81,7 +81,7 @@ public partial class MainWindow : Window
     private void StartPlaylistPlayback(bool fromEnd)
     {
         if (PlaylistSourcePicker.SelectedItem is not PlaylistSource source || source.Files.Count == 0) return;
-        _activeQueue = source.Files.ToList();
+        _activeQueue = CreatePlaybackQueue(source.Files);
         _activeQueueSourceId = source.Id;
         PlayLibraryTrack(fromEnd ? _activeQueue.Count - 1 : 0);
     }
@@ -108,7 +108,7 @@ public partial class MainWindow : Window
 
     private void PlayLibraryTrack(int index)
     {
-        if (_activeQueue.Count == 0) _activeQueue = _library.ToList();
+        if (_activeQueue.Count == 0) _activeQueue = CreatePlaybackQueue(_library);
         if (_activeQueue.Count == 0 || index < 0) return;
         index %= _activeQueue.Count;
         // Skip unreadable tracks so one bad file does not stall an entire playlist.
@@ -119,7 +119,7 @@ public partial class MainWindow : Window
         SourceStatus.Text = "NO PLAYABLE TRACKS";
     }
 
-    private bool TryPlayLibraryTrack(int index, double resumeSeconds = 0)
+    private bool TryPlayLibraryTrack(int index, double resumeSeconds = 0,bool startPlayback=true)
     {
         if (_radioActive) StopRadioMode(true);
         var file = _activeQueue[index];
@@ -156,9 +156,9 @@ public partial class MainWindow : Window
             var output = new PeakLimiterSampleProvider(_renderGate);
             _waveOut.Init(new SpectrumTap(output, _audioSamples, _archived, () => _classicActive, _analysisSignal, NotifyAudioSignal));
             _waveOut.PlaybackStopped += LocalPlaybackStopped;
-            _waveOut.Play();
-            SourceStatus.Text = "LOCAL · PLAYING";
-            SetPlayPauseState(true);
+            if(startPlayback)_waveOut.Play();
+            SourceStatus.Text = startPlayback ? "LOCAL · PLAYING" : "LOCAL · PAUSED";
+            SetPlayPauseState(startPlayback);
             _localProgressTimer.Start();
             UpdateLocalProgress();
             SavePlaybackState(force: true);

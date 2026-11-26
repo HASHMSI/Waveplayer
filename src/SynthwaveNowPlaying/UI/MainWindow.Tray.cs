@@ -112,7 +112,15 @@ public partial class MainWindow
 
     internal void RestoreFromTray()
     {
+        Opacity=1;ShowInTaskbar=true;ShowActivated=true;
         Show(); WindowState = WindowState.Normal; Activate();
         foreach (Window owned in OwnedWindows) if (owned.IsVisible) owned.Activate();
+    }
+    internal void ShowAtStartupInTray()
+    {
+        Opacity=0;ShowActivated=false;ShowInTaskbar=false;
+        RoutedEventHandler? loaded=null;
+        loaded=(_,_)=>{Loaded-=loaded;if(_tray?.Registered==true)Hide();else{Opacity=1;ShowInTaskbar=true;} };
+        Loaded+=loaded;Show();
     }
 }

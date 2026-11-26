@@ -40,6 +40,8 @@ public partial class MainWindow : Window
     private bool _pinned = true;
     private bool _dockToBottomRight = true;
     private bool _windowReady;
+    internal bool StartedAtWindowsLogon {get;set;}
+    internal bool SkipAutomaticUpdate {get;set;}
     private readonly List<string> _library = [];
     private readonly Dictionary<string, string> _trackTitleCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, TrackMetadata> _trackMetadataCache = new(StringComparer.OrdinalIgnoreCase);
@@ -132,6 +134,7 @@ public partial class MainWindow : Window
         if (Environment.GetEnvironmentVariable("WAVEPLAYER_RADIO_PREVIEW") == "1")
             _ = StartRadioModeAsync();
         else RestorePlaybackState();
+        _ = UpdateClient.CheckOnLaunchAsync(this);
     }
 
     private void NotifyAudioSignal()
@@ -324,6 +327,14 @@ public partial class MainWindow : Window
         if (dialog.ShowDialog() == true) { _settings.Save(); ApplySettings(); ScanMusicFolders(_settings.GetMusicFolders()); }
         else SelectVisualizer(_settings.ClassicVisualizer);
         if (dialog.EditModeRequested) EnterEditMode();
+        if (dialog.InstallLatestUpdateRequested || dialog.LocalUpdatePackage is not null)
+            _ = InstallRequestedUpdateAsync(dialog.LocalUpdatePackage);
+    }
+
+    private async Task InstallRequestedUpdateAsync(string? package)
+    {
+        try { await UpdateClient.StartInstallerAsync(this, package); }
+        catch (Exception ex) { MessageBox.Show(this, ex.Message, "WavePlayer · Package Installer"); }
     }
 
     private bool ReadSpectrumPreview(float[] destination)
@@ -362,6 +373,8 @@ public partial class MainWindow : Window
 
     private void ApplySettings()
     {
+        try { WindowsStartup.Sync(_settings.StartWithWindows); }
+        catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Windows startup: {ex.Message}"); }
         if (_settings.AutomixTiming == AutomixTiming.Classic && AdaptiveWaiting) CancelDemoCrossfade();
         SynthBackground.Theme = _settings.Background;
         PlaylistBackground.Theme = _settings.Background;

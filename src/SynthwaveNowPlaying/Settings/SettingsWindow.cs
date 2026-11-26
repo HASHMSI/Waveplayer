@@ -146,6 +146,9 @@ internal sealed partial class SettingsWindow : Window
         row.Children.Add(titles);
 
         var close = ActionButton("×", compact: true);
+        close.Width = 30;
+        close.Height = 30;
+        close.VerticalAlignment = VerticalAlignment.Center;
         close.ToolTip = "Close settings";
         close.Click += (_, _) => RequestClose(false);
         Grid.SetColumn(close, 1);

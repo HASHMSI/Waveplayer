@@ -7,7 +7,7 @@ namespace SynthwaveNowPlaying.UI;
 
 public partial class RadioConceptView : UserControl
 {
-    public event Action? Local, Pin, Settings, Hide, Previous, Next, Play, FavoriteRequested, EqRequested, EqResetRequested, RemixRequested;
+    public event Action? Local, Pin, Settings, Hide, Previous, Next, Play, FavoriteRequested, EqRequested, EqResetRequested, RemixRequested, ShuffleRequested;
     public RadioConceptView()
     {
         InitializeComponent();
@@ -110,6 +110,7 @@ public partial class RadioConceptView : UserControl
     private void Previous_Click(object s, RoutedEventArgs e) => Previous?.Invoke();
     private void Next_Click(object s, RoutedEventArgs e) => Next?.Invoke();
     private void Play_Click(object s, RoutedEventArgs e) => Play?.Invoke();
+    private void Shuffle_Click(object s,RoutedEventArgs e)=>ShuffleRequested?.Invoke();
     private void Favorite_Click(object s, RoutedEventArgs e)
     {
         FavoriteRequested?.Invoke();
@@ -146,6 +147,7 @@ public partial class RadioConceptView : UserControl
     public void SetMode(bool radio)
     {
         _radioMode=radio;
+        Shuffle.Visibility=radio?Visibility.Collapsed:Visibility.Visible;
         EqReset.Visibility=Visibility.Collapsed;
         ModeLabel.Text=radio?" / RADIO":"";
         CoverHost.Visibility=radio?Visibility.Collapsed:Visibility.Visible;

@@ -7,7 +7,6 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $project = Join-Path $root 'src/SynthwaveNowPlaying/SynthwaveNowPlaying.csproj'
 $payload = Join-Path $PSScriptRoot 'payload'
-$legacyPayload = Join-Path $PSScriptRoot 'payload-legacy'
 $release = Join-Path $PSScriptRoot 'release'
 
 function Clear-GeneratedFolder([string]$folder, [string]$expectedName) {
@@ -37,32 +36,19 @@ function New-Archive([string]$destination, [string]$sourceRoot, [string[]]$names
 }
 
 Clear-GeneratedFolder $payload 'payload'
-Clear-GeneratedFolder $legacyPayload 'payload-legacy'
 & $Dotnet publish $project -c Release -r win-x64 --self-contained true `
     -p:PublishSingleFile=false -p:PublishTrimmed=false -o $payload
 if ($LASTEXITCODE -ne 0) { throw 'Multi-file player publish failed.' }
-& $Dotnet publish $project -c Release -r win-x64 --self-contained true `
-    -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
-    -p:PublishTrimmed=false -o $legacyPayload
-if ($LASTEXITCODE -ne 0) { throw 'Legacy bridge publish failed.' }
-
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 New-Item -ItemType Directory -Path $release -Force | Out-Null
-$version = ([Version](Get-Item (Join-Path $payload 'WavePlayer.exe')).VersionInfo.FileVersion).ToString(3)
-$files = @(Get-ChildItem -LiteralPath $payload -Recurse -File | Where-Object Extension -ne '.pdb' |
-    ForEach-Object {
-        $name = [IO.Path]::GetRelativePath($payload, $_.FullName).Replace('\', '/')
-        [ordered]@{ Path = $name; Size = $_.Length; Sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant() }
-    } | Sort-Object { $_.Path })
-$manifest = [ordered]@{ Format = 2; Version = $version; BaseVersion = $null; Files = $files; Changed = $null }
+& (Join-Path $PSScriptRoot 'write-manifest.ps1') -Payload $payload
 $manifestPath = Join-Path $payload 'WavePlayer-update.json'
-$manifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $manifestPath -Encoding utf8
+$manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+$version = $manifest.Version
+$files = $manifest.Files
 $fileNames = @($files | ForEach-Object { $_.Path })
 New-Archive (Join-Path $release 'WavePlayerFiles.zip') $payload @($fileNames + 'WavePlayer-update.json')
-New-Archive (Join-Path $release 'WavePlayerPortable.zip') $legacyPayload `
-    @('WavePlayer.exe', 'Classic/SynthwaveNowPlaying.dll')
-
 $patchPath = Join-Path $release 'WavePlayerPatch.zip'
 if ($BasePayload) {
     $baseManifestPath = Join-Path $BasePayload 'WavePlayer-update.json'
@@ -81,5 +67,5 @@ if ($BasePayload) {
 }
 elseif (Test-Path -LiteralPath $patchPath) { Remove-Item -LiteralPath $patchPath -Force }
 
-Get-ChildItem -LiteralPath $release -Filter 'WavePlayer*.zip' -File |
+@('WavePlayerFiles.zip', 'WavePlayerPatch.zip') | ForEach-Object { Get-Item -LiteralPath (Join-Path $release $_) -ErrorAction SilentlyContinue } |
     Select-Object Name, Length, @{Name='SHA256';Expression={(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}}

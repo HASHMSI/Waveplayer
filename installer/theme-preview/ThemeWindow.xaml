@@ -1,4 +1,4 @@
-<Window x:Class="WavePlayer.ThemePreview.ThemeWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="WavePlayer · Choose your atmosphere" Width="900" Height="590" MinWidth="900" MinHeight="590" MaxWidth="900" MaxHeight="590" WindowStartupLocation="CenterScreen" WindowStyle="None" AllowsTransparency="False" Background="#0C1020" Icon="pack://application:,,,/Assets/WavePlayer.ico">
+<Window x:Class="WavePlayer.ThemePreview.ThemeWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="WavePlayer · Choose your atmosphere" Width="900" Height="590" MinWidth="900" MinHeight="590" MaxWidth="900" MaxHeight="590" WindowStartupLocation="CenterScreen" WindowStyle="None" ResizeMode="NoResize" AllowsTransparency="True" Background="Transparent" FontFamily="Bahnschrift" Opacity="0">
  <Window.Resources>
   <Style x:Key="ChromeButton" TargetType="Button">
    <Setter Property="Foreground" Value="#D9D8EB"/><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/><Setter Property="Cursor" Value="Hand"/><Setter Property="FontSize" Value="17"/>
@@ -9,18 +9,18 @@
    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="Surface" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="11"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Opacity" Value=".82"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
   </Style>
  </Window.Resources>
- <Border BorderBrush="#696687" BorderThickness="1" Background="#101426" CornerRadius="16" ClipToBounds="True">
-  <Grid>
+ <Border BorderBrush="#93638F" BorderThickness="1" Background="#101426" CornerRadius="18" ClipToBounds="True">
+  <Grid x:Name="AtmosphereSurface">
    <Grid.Background><RadialGradientBrush Center=".18,.15" GradientOrigin=".18,.15" RadiusX="1" RadiusY="1"><GradientStop Color="#342041"/><GradientStop Color="#12182D" Offset=".53"/><GradientStop Color="#0D1223" Offset="1"/></RadialGradientBrush></Grid.Background>
    <Grid.RowDefinitions><RowDefinition Height="53"/><RowDefinition Height="*"/><RowDefinition Height="83"/></Grid.RowDefinitions>
    <Border Grid.Row="0" BorderBrush="#525372" BorderThickness="0,0,0,1" Background="#171A2A" MouseLeftButtonDown="Header_Drag">
     <Grid Margin="22,0,12,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="35"/></Grid.ColumnDefinitions>
-     <StackPanel Orientation="Horizontal" VerticalAlignment="Center"><TextBlock Text="▥" Foreground="#F47ADC" FontSize="20" FontWeight="Bold"/><TextBlock Text="WAVEPLAYER" Foreground="#F7F4FF" FontSize="14" FontWeight="Bold" Margin="11,3,0,0"/><Border Width="1" Background="#5A5C74" Margin="15,10,15,10"/><TextBlock Text="SETUP EXPERIENCE" Foreground="#9398B5" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"/></StackPanel>
+     <StackPanel Orientation="Horizontal" VerticalAlignment="Center"><Image x:Name="BrandIcon" Width="29" Height="29"/><TextBlock Text="WAVEPLAYER" Foreground="#F7F4FF" FontSize="14" FontWeight="Bold" Margin="11,3,0,0"/><Border Width="1" Background="#5A5C74" Margin="15,10,15,10"/><TextBlock Text="YOUR PLAYER. YOUR ATMOSPHERE." Foreground="#B9B0CF" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"/></StackPanel>
      <Button Grid.Column="1" Content="×" Click="Close_Click" Style="{StaticResource ChromeButton}"/>
     </Grid>
    </Border>
    <Grid Grid.Row="1" Margin="54,23,54,4"><Grid.RowDefinitions><RowDefinition Height="95"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-    <StackPanel HorizontalAlignment="Center"><TextBlock Text="CHOOSE YOUR ATMOSPHERE" Foreground="#F6F2FF" FontSize="30" FontWeight="Bold" HorizontalAlignment="Center"/><TextBlock Text="Choose the look of your player · change it later in Settings" Foreground="#A8AAC4" FontSize="13" Margin="0,6,0,0" HorizontalAlignment="Center"/></StackPanel>
+    <StackPanel HorizontalAlignment="Center"><TextBlock Text="CHOOSE YOUR ATMOSPHERE" FontSize="30" FontWeight="Bold" HorizontalAlignment="Center"><TextBlock.Foreground><LinearGradientBrush StartPoint="0,0" EndPoint="1,0"><GradientStop Color="#FFB8EB"/><GradientStop Color="#F4EEFF" Offset=".5"/><GradientStop Color="#9DEBFF" Offset="1"/></LinearGradientBrush></TextBlock.Foreground></TextBlock><TextBlock Text="Two looks. One player. Hover to explore, click to choose." Foreground="#B5ADC9" FontSize="13" Margin="0,8,0,0" HorizontalAlignment="Center"/></StackPanel>
     <Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="26"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
      <Border x:Name="RetroCard" Grid.Column="0" CornerRadius="17" BorderThickness="2" BorderBrush="#FF73C7" Background="#211333" Cursor="Hand" MouseEnter="Card_Enter" MouseLeave="Card_Leave" MouseMove="Card_Move" MouseLeftButtonUp="Card_Click" Focusable="True" KeyDown="Card_KeyDown" RenderTransformOrigin=".5,.5" ClipToBounds="False">
       <Border.RenderTransform><TransformGroup><ScaleTransform x:Name="RetroScale"/><SkewTransform x:Name="RetroSkew"/><TranslateTransform x:Name="RetroShift"/></TransformGroup></Border.RenderTransform>
@@ -28,8 +28,12 @@
       <Grid ClipToBounds="True"><Grid.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#391448"/><GradientStop Color="#151B3A" Offset=".7"/><GradientStop Color="#112C46" Offset="1"/></LinearGradientBrush></Grid.Background>
         <Grid.RowDefinitions><RowDefinition Height="59"/><RowDefinition Height="133"/><RowDefinition Height="*"/></Grid.RowDefinitions>
        <Grid Margin="18,8,18,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Orientation="Horizontal"><TextBlock Text="80s" FontSize="33" FontWeight="Black" FontStyle="Italic" Foreground="#FF86D9"/><TextBlock Text="  /  NEON DRIVE" VerticalAlignment="Center" FontSize="10" FontWeight="Bold" Foreground="#96F1FF"/></StackPanel><TextBlock x:Name="RetroCheck" Grid.Column="1" Text="○" FontSize="23" Foreground="#FF84D8" VerticalAlignment="Center"/></Grid>
-       <Border Grid.Row="1" Margin="18,3,18,0" CornerRadius="9"><Border.Background><ImageBrush ImageSource="pack://application:,,,/Assets/Classic80s.jpg" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality"/></Border.Background></Border>
-       <TextBlock Grid.Row="2" Text="Neon colors  ·  Retro motion" Foreground="#EBC8EB" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+       <Border x:Name="RetroScreenshot" Grid.Row="1" Margin="18,3,18,0" CornerRadius="9"><Border.Background><ImageBrush Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality"/></Border.Background></Border>
+       <StackPanel Grid.Row="2" Margin="20,24,20,0">
+        <TextBlock Text="THE ORIGINAL NIGHT DRIVE" Foreground="#FFB9E7" FontSize="12" FontWeight="Bold"/>
+        <TextBlock Text="Neon grid, glowing controls and album-reactive colors." TextWrapping="Wrap" LineHeight="20" Foreground="#C8B4D5" FontSize="12" Margin="0,9,0,0"/>
+        <TextBlock Text="RETRO CHROME   /   NEON SPECTRUM" Foreground="#8BCAD9" FontSize="9" Margin="0,16,0,0"/>
+       </StackPanel>
       </Grid>
      </Border>
      <Border x:Name="ModernCard" Grid.Column="2" CornerRadius="17" BorderThickness="2" BorderBrush="#65748E" Background="#172437" Cursor="Hand" MouseEnter="Card_Enter" MouseLeave="Card_Leave" MouseMove="Card_Move" MouseLeftButtonUp="Card_Click" Focusable="True" KeyDown="Card_KeyDown" RenderTransformOrigin=".5,.5">
@@ -38,8 +42,12 @@
       <Grid ClipToBounds="True"><Grid.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#263348"/><GradientStop Color="#101C2E" Offset="1"/></LinearGradientBrush></Grid.Background>
        <Grid.RowDefinitions><RowDefinition Height="59"/><RowDefinition Height="133"/><RowDefinition Height="*"/></Grid.RowDefinitions>
        <Grid Margin="18,8,18,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Orientation="Horizontal"><TextBlock Text="80s" FontSize="33" FontWeight="Black" FontStyle="Italic" Foreground="#84E9F3"><TextBlock.Effect><DropShadowEffect Color="#4ED7F4" BlurRadius="12" ShadowDepth="0" Opacity=".8"/></TextBlock.Effect></TextBlock><TextBlock Text="  /  MODERN" VerticalAlignment="Center" FontSize="11" FontWeight="Bold" Foreground="#D9A8FF"/></StackPanel><TextBlock x:Name="ModernCheck" Grid.Column="1" Text="○" FontSize="23" Foreground="#8ADCE8" VerticalAlignment="Center"/></Grid>
-       <Border Grid.Row="1" Margin="18,3,18,0" CornerRadius="9"><Border.Background><ImageBrush ImageSource="pack://application:,,,/Assets/Modern80s.jpg" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality"/></Border.Background></Border>
-       <TextBlock Grid.Row="2" Text="Current motion  ·  Cleaner finish" Foreground="#B7C9D4" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+       <Border x:Name="ModernScreenshot" Grid.Row="1" Margin="18,3,18,0" CornerRadius="9"><Border.Background><ImageBrush Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality"/></Border.Background></Border>
+       <StackPanel Grid.Row="2" Margin="20,24,20,0">
+        <TextBlock Text="A DIFFERENT KIND OF AFTER DARK" Foreground="#A1EAF3" FontSize="12" FontWeight="Bold"/>
+        <TextBlock Text="Looping night-drive video with a softer, modern finish." TextWrapping="Wrap" LineHeight="20" Foreground="#B7C9D4" FontSize="12" Margin="0,9,0,0"/>
+        <TextBlock Text="VIDEO BACKDROP   /   SOFT CHROME" Foreground="#D0B2EB" FontSize="9" Margin="0,16,0,0"/>
+       </StackPanel>
       </Grid>
      </Border>
     </Grid>
@@ -55,7 +63,7 @@
        <TextBlock x:Name="PreviewTitle" Text="80s  /  NEON DRIVE" Foreground="#FFD3F1" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
       </Grid>
       <Border x:Name="PreviewScreenshot" Grid.Row="1" CornerRadius="11">
-       <Border.Background><ImageBrush ImageSource="pack://application:,,,/Assets/Classic80s.jpg" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality"/></Border.Background>
+       <Border.Background><ImageBrush Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality"/></Border.Background>
       </Border>
      </Grid>
     </Border>

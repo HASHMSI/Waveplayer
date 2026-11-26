@@ -18,12 +18,17 @@ public partial class App : System.Windows.Application
     private RegisteredWaitHandle? _restoreWait;
     private EventWaitHandle? _previewSignal;
     private RegisteredWaitHandle? _previewWait;
+    private EventWaitHandle? _exitSignal;
+    private RegisteredWaitHandle? _exitWait;
     private bool _ownsInstance;
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        if (e.Args.Length == 3 && e.Args[0] == "--apply-update" && int.TryParse(e.Args[2], out var previousPid))
-            MainWindow = new UpdaterWindow(e.Args[1], previousPid);
+        var startup = e.Args.Contains("--startup") || e.Args.Contains("--resume-hidden");
+        if (e.Args.Length >= 3 && e.Args[0] is "--apply-update" or "--apply-package" && int.TryParse(e.Args[2], out var previousPid))
+            MainWindow = new UpdaterWindow(e.Args[1], previousPid,
+                e.Args[0] == "--apply-package" && e.Args.Length >= 4 ? e.Args[3] : null,
+                e.Args.Contains("--resume-hidden"));
         else
         {
             // Reopening the shortcut restores the hidden player instead of
@@ -34,14 +39,17 @@ public partial class App : System.Windows.Application
             var name = @"Local\WavePlayer-" + identity + labSuffix;
             _restoreSignal = new EventWaitHandle(false, EventResetMode.AutoReset, name + "-restore");
             _previewSignal = new EventWaitHandle(false, EventResetMode.AutoReset, name + "-mixpreview");
+            _exitSignal = new EventWaitHandle(false, EventResetMode.AutoReset, name + "-exit");
             _instance = new Mutex(true, name, out _ownsInstance);
             if (!_ownsInstance)
             {
-                if (e.Args.Contains("--preview-automix")) _previewSignal.Set(); else _restoreSignal.Set();
+                if (e.Args.Contains("--exit")) _exitSignal.Set();
+                else if (e.Args.Contains("--preview-automix")) _previewSignal.Set(); else if (!startup) _restoreSignal.Set();
                 Shutdown(); return;
             }
+            if (e.Args.Contains("--exit")) { Shutdown(); return; }
             var settings = AppSettings.Load();
-            if (!settings.ThemeChoiceMade)
+            if (!settings.ThemeChoiceMade && !startup)
             {
                 ShutdownMode = ShutdownMode.OnExplicitShutdown;
                 var chooser = new ThemeWindow(settings.UiStyle == "Modern80s");
@@ -50,8 +58,14 @@ public partial class App : System.Windows.Application
                 settings.ThemeChoiceMade = true;
                 settings.Save();
             }
-            MainWindow = new MainWindow();
+            MainWindow = new MainWindow { StartedAtWindowsLogon = startup,
+                SkipAutomaticUpdate = e.Args.Contains("--cleanup-updater") };
             ((MainWindow)MainWindow).InitializeTray();
+            _exitWait = ThreadPool.RegisterWaitForSingleObject(_exitSignal, (_, _) =>
+            {
+                if (!Dispatcher.HasShutdownStarted)
+                    Dispatcher.BeginInvoke(() => (MainWindow as MainWindow)?.ExitApplication());
+            }, null, Timeout.Infinite, false);
             _restoreWait = ThreadPool.RegisterWaitForSingleObject(_restoreSignal, (_, _) =>
             {
                 if (!Dispatcher.HasShutdownStarted)
@@ -62,11 +76,12 @@ public partial class App : System.Windows.Application
                 if (!Dispatcher.HasShutdownStarted)
                     Dispatcher.BeginInvoke(() => (MainWindow as MainWindow)?.PreviewMixOverlay());
             }, null, Timeout.Infinite, false);
-            if (e.Args.Length == 2 && e.Args[0] == "--cleanup-updater")
+            if (e.Args.Length >= 2 && e.Args[0] == "--cleanup-updater")
                 _ = UpdateClient.CleanupHelperAsync(e.Args[1]);
             else _ = UpdateClient.CleanupStaleHelpersAsync();
         }
-        MainWindow.Show();
+        if (startup && MainWindow is MainWindow hiddenPlayer) hiddenPlayer.ShowAtStartupInTray();
+        else MainWindow.Show();
         ShutdownMode = ShutdownMode.OnMainWindowClose;
         if (e.Args.Contains("--preview-automix") && MainWindow is MainWindow player) player.PreviewMixOverlay();
     }
@@ -74,6 +89,8 @@ public partial class App : System.Windows.Application
     protected override void OnExit(ExitEventArgs e)
     {
         _restoreWait?.Unregister(null);
+        _exitWait?.Unregister(null);
+        _exitSignal?.Dispose();
         _previewWait?.Unregister(null);
         _previewSignal?.Dispose();
         _restoreSignal?.Dispose();

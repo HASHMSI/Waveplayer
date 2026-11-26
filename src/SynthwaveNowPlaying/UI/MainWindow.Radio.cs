@@ -307,6 +307,7 @@ public partial class MainWindow
         _archived.View.Margin = Spectrum.Margin;
         EqControls.Visibility = radio ? Visibility.Collapsed : Visibility.Visible;
         RemixDemoButton.Visibility = radio ? Visibility.Collapsed : Visibility.Visible;
+        UpdateShuffleState();
         RadioToggleButton.Tag = radio ? "Active" : null;
         RadioToggleButton.ToolTip = radio ? "Return to local music" : "Play Chillsynth FM · Nightride FM";
         BrandTagline.Text = radio ? "  •  ON AIR" : "  •  STEREO FM 84";

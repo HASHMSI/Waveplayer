@@ -45,6 +45,7 @@ internal sealed partial class SettingsWindow
         AddSection("player", "04", "PLAYER", "Volume, EQ and Automix", BuildPlayerCard(_settings), pageHost, railStack);
         AddSection("edit", "05", "EDIT MODE", "Widget layout", BuildEditModeCard(), pageHost, railStack);
         AddSection("bpm", "06", "BPM SCAN", "Analyze this playlist", BuildBpmScanCard(scrollBarStyle), pageHost, railStack);
+        AddSection("system", "07", "SYSTEM & UPDATES", "Startup and packages", BuildSystemCard(), pageHost, railStack);
 
         railStack.Children.Add(new Border
         {
@@ -101,9 +102,9 @@ internal sealed partial class SettingsWindow
             Content = labels,
             Template = ButtonTemplate(),
             HorizontalContentAlignment = HorizontalAlignment.Left,
-            Height = 54,
+            Height = 48,
             Padding = new Thickness(10, 5, 8, 5),
-            Margin = new Thickness(0, 0, 0, 5),
+            Margin = new Thickness(0, 0, 0, 4),
             Foreground = Ink,
             BorderThickness = new Thickness(1),
             Cursor = System.Windows.Input.Cursors.Hand

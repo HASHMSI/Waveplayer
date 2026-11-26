@@ -283,6 +283,7 @@ internal sealed partial class SettingsWindow : Window
             _settings.StableAudioBuffering = _stableAudio.IsChecked == true;
             _settings.AutomixOverlayScale = _overlayScale.Value;
             _settings.AutomixOverlayEnabled = _overlayEnabled.IsChecked == true;
+            _settings.StartWithWindows = _startWithWindows.IsChecked == true;
             RequestClose(true);
         };
         actions.Children.Add(save);

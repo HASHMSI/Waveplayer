@@ -15,6 +15,18 @@ internal static class UpdatePackage
     internal const string ManifestName = "WavePlayer-update.json";
     private static readonly JsonSerializerOptions Json = new() { PropertyNameCaseInsensitive = true };
 
+    internal static UpdateManifest ReadArchive(string package)
+    {
+        using var archive = ZipFile.OpenRead(package);
+        var entry = archive.GetEntry(ManifestName)
+            ?? throw new InvalidDataException("Choose a ZIP containing WavePlayer-update.json, not a setup EXE.");
+        using var stream = entry.Open();
+        var manifest = JsonSerializer.Deserialize<UpdateManifest>(stream, Json)
+            ?? throw new InvalidDataException("The update manifest is empty.");
+        Validate(manifest);
+        return manifest;
+    }
+
     internal static UpdateManifest? ReadInstalled(string directory)
     {
         var path = Path.Combine(directory, ManifestName);
@@ -109,7 +121,7 @@ internal static class UpdatePackage
 
     internal static void ValidatePath(string path)
     {
-        if (string.IsNullOrWhiteSpace(path) || path == ManifestName || path.Contains('\\') ||
+        if (string.IsNullOrWhiteSpace(path) || path.Equals(ManifestName, StringComparison.OrdinalIgnoreCase) || path.Contains('\\') ||
             path.Contains(':') || path.StartsWith('/') ||
             path.Split('/').Any(part => part is "" or "." or ".."))
             throw new InvalidDataException("An update file path is invalid.");

@@ -24,6 +24,8 @@ internal sealed class AppSettings
     public double CustomMix { get; set; } = .5;
     public bool EqualizerEnabled { get; set; }
     public bool RemixDemoEnabled { get; set; }
+    public bool ShuffleEnabled { get; set; }
+    public bool StartWithWindows { get; set; } = true;
     public List<string> RadioFavorites { get; set; } = [];
     public bool StableAudioBuffering { get; set; }
     public bool AutomixOverlayEnabled { get; set; } = true;

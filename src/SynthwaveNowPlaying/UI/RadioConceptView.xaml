@@ -82,6 +82,7 @@
    <Border Grid.Row="2" Background="#BB232241" BorderBrush="#557C709E" BorderThickness="0,.5,0,0"/>
    <Grid Grid.Row="2" Margin="10,0">
     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+     <local:ShuffleControl x:Name="Shuffle" Width="24" Height="23" Margin="0,0,3,0" Click="Shuffle_Click"/>
      <Button Width="24" Height="19" Click="Previous_Click" ToolTip="Previous channel" Background="Transparent" BorderBrush="Transparent"><Path Data="M2,1 L4,1 4,11 2,11 Z M12,1 L12,11 5,6 Z" Fill="#E4E2FF" Width="11" Height="10" Stretch="Uniform"/></Button>
      <Button Width="31" Height="21" Margin="3,0" BorderBrush="#8CE9DF" Click="Play_Click" ToolTip="Play or pause radio" AutomationProperties.Name="Play or pause radio"><TextBlock x:Name="PlayGlyph" Text="▶" FontSize="11"/></Button>
      <Button Width="24" Height="19" Click="Next_Click" ToolTip="Next channel" Background="Transparent" BorderBrush="Transparent"><Path Data="M10,1 L12,1 12,11 10,11 Z M2,1 L9,6 2,11 Z" Fill="#E4E2FF" Width="11" Height="10" Stretch="Uniform"/></Button>
@@ -90,7 +91,7 @@
      <Border x:Name="StatusDivider" Width=".6" Height="12" Background="#645D648E" Margin="9,0"/>
      <TextBlock x:Name="FooterStatus" Text="CONNECTING" Foreground="#FF9DAB" FontSize="6.5" FontWeight="Bold" VerticalAlignment="Center"/>
     </StackPanel>
-    <Grid x:Name="SeekHost" Margin="102,0,0,0" Visibility="Collapsed" VerticalAlignment="Center">
+    <Grid x:Name="SeekHost" Margin="130,0,0,0" Visibility="Collapsed" VerticalAlignment="Center">
      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="35"/></Grid.ColumnDefinitions>
      <Grid x:Name="SeekSliderHost"/>
      <TextBlock x:Name="Elapsed" Grid.Column="1" Text="0:00" FontSize="7" Foreground="#D7D5EB" VerticalAlignment="Center" HorizontalAlignment="Right"/>

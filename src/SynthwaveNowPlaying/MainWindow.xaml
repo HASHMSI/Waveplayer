@@ -382,6 +382,7 @@
                                 <TextBlock x:Name="TrackKey" Margin="0,1,0,0" Foreground="{DynamicResource AlbumSecondaryBrush}" FontSize="6.5" TextTrimming="CharacterEllipsis"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <ui:ShuffleControl x:Name="ShuffleButton" Width="25" Height="25" Margin="0,0,4,0" Click="Shuffle_Click"/>
                                 <Button x:Name="PreviousControl" Style="{StaticResource TransportControlButton}" Width="27" Height="27" ToolTip="Previous track" Click="PreviousButton_Click" Margin="0,0,4,0">
                                     <Path Data="M2,2 L5,2 5,16 2,16 Z M15,2 L15,16 6,9 Z" Width="15" Height="15" Stretch="Uniform" Fill="#FFF8F3FF"/>
                                 </Button>

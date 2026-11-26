@@ -10,11 +10,16 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using WavePlayer.ThemePreview;
+using SynthwaveNowPlaying;
 
 namespace WavePlayerSetup;
 
 public partial class MainWindow : Window
 {
+    private static bool Isolated => !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("WAVEPLAYER_LAB_DATA_DIR"));
+    private static string PreferencesPath => Path.Combine(Isolated
+        ? Environment.GetEnvironmentVariable("WAVEPLAYER_LAB_DATA_DIR")!
+        : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NeonWave"), "settings.json");
     private static readonly string[] StageNames = ["WELCOME", "DESTINATION", "INSTALLING", "COLORWAY", "MUSIC FOLDERS", "PLAYBACK", "READY"];
     private static readonly string[] Titles = ["Make room for the night", "Choose an install location", "Building your listening space", "Make it yours", "Find your music", "Set the rhythm", "Ready to play"];
     private int _stage;
@@ -48,7 +53,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        var settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NeonWave", "settings.json");
+        var settingsPath = PreferencesPath;
         try
         {
             if (File.Exists(settingsPath))
@@ -404,34 +409,33 @@ public partial class MainWindow : Window
     private static void InstallPayload(string destination, bool desktopShortcut, IProgress<int> progress)
     {
         var full = Path.GetFullPath(destination);
+        var playerPath = Path.Combine(full, "WavePlayer.exe");
+        foreach (var process in Process.GetProcessesByName("WavePlayer"))
+            using (process)
+                if (string.Equals(process.MainModule?.FileName, playerPath, StringComparison.OrdinalIgnoreCase))
+                    throw new IOException("WavePlayer is running. Exit it from the tray menu, then try installing again.");
         Directory.CreateDirectory(full);
-        using var resource = typeof(MainWindow).Assembly.GetManifestResourceStream("WavePlayerSetup.payload.zip")
-            ?? throw new InvalidOperationException("Player package is missing.");
-        using var archive = new ZipArchive(resource);
-        var entries = archive.Entries.Where(entry => entry.Name.Length > 0).ToArray();
-        long totalBytes = entries.Sum(entry => entry.Length);
-        long copiedBytes = 0;
-        for (var index = 0; index < entries.Length; index++)
+        var stage = Path.Combine(full, ".WavePlayer-stage-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(stage);
+        try
         {
-            var entry = entries[index];
-            var target = Path.GetFullPath(Path.Combine(full, entry.FullName));
-            if (!target.StartsWith(full + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("Package path is invalid.");
-            Directory.CreateDirectory(Path.GetDirectoryName(target)!);
-            using var input = entry.Open();
-            using var output = new FileStream(target + ".partial", FileMode.Create, FileAccess.Write);
-            var block = new byte[256 * 1024];
-            int read;
-            while ((read = input.Read(block)) > 0)
-            {
-                output.Write(block, 0, read);
-                copiedBytes += read;
-                progress.Report((int)(copiedBytes * 100 / Math.Max(1, totalBytes)));
-            }
-            output.Close();
-            File.Move(target + ".partial", target, true);
-
+            using var resource = typeof(MainWindow).Assembly.GetManifestResourceStream("WavePlayerSetup.payload.zip")
+                ?? throw new InvalidOperationException("Player package is missing.");
+            var archivePath = Path.Combine(stage, "payload.zip");
+            using (var output = File.Create(archivePath)) resource.CopyTo(output);
+            var header = UpdatePackage.ReadArchive(archivePath);
+            var verified = Path.Combine(stage, "verified");
+            var manifest = UpdatePackage.Stage(archivePath, verified, full, Version.Parse(header.Version), false);
+            UpdateInstall.Apply(verified, full, manifest, allowLegacyInstall: true, progress: progress);
         }
+        finally
+        {
+            // Stage was created here as a direct child of the selected install path.
+            if (Path.GetDirectoryName(Path.GetFullPath(stage)) == full &&
+                Guid.TryParseExact(Path.GetFileName(stage)[18..], "N", out _))
+                try { Directory.Delete(stage, recursive: true); } catch (IOException) { }
+        }
+        if (Isolated) return; // Integration tests must not replace OS shortcuts.
         var menu = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), "Programs");
         Directory.CreateDirectory(menu);
         try
@@ -460,14 +464,17 @@ public partial class MainWindow : Window
     private void SavePreferences()
     {
         if (!_installed) throw new InvalidOperationException("Install the player before saving.");
-        var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NeonWave", "settings.json");
+        var path = PreferencesPath;
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         JsonObject data;
         try { data = File.Exists(path) ? JsonNode.Parse(File.ReadAllText(path)) as JsonObject ?? new() : new(); }
         catch { data = new(); }
         data["Background"] = _theme;
         data["UiStyle"] = _uiStyle;
+        // The chooser is shown on every setup run, including upgrades. Its new
+        // choice becomes the player's default without resetting other settings.
         data["ThemeChoiceMade"] = true;
+        data["StartWithWindows"] ??= true;
         data["CustomPrimary"] = _primary;
         data["CustomSecondary"] = _secondary;
         data["MusicFolders"] = new JsonArray(_folders.Select(folder => JsonValue.Create(folder)).ToArray());
@@ -478,5 +485,10 @@ public partial class MainWindow : Window
         var temporary = path + ".setup-tmp";
         File.WriteAllText(temporary, data.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
         File.Move(temporary, path, true);
+        if (Isolated) return;
+        using var run = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true);
+        if (data["StartWithWindows"]!.GetValue<bool>())
+            run.SetValue("WavePlayer", $"\"{Path.Combine(_destination, "WavePlayer.exe")}\" --startup", RegistryValueKind.String);
+        else run.DeleteValue("WavePlayer", false);
     }
 }

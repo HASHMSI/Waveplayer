@@ -6,14 +6,16 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>WavePlayerSetup</AssemblyName>
-    <Version>1.1.1</Version>
-    <InformationalVersion>1.1.1</InformationalVersion>
+    <Version>1.1.2</Version>
+    <InformationalVersion>1.1.2</InformationalVersion>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
-    <FileVersion>1.1.1</FileVersion>
+    <FileVersion>1.1.2</FileVersion>
     <ApplicationIcon>..\..\src\SynthwaveNowPlaying\Assets\WavePlayer.ico</ApplicationIcon>
     <DefineConstants>$(DefineConstants);SETUP</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\..\src\SynthwaveNowPlaying\Updates\UpdatePackage.cs" Link="UpdatePackage.cs" />
+    <Compile Include="..\..\src\SynthwaveNowPlaying\Updates\UpdateInstall.cs" Link="UpdateInstall.cs" />
     <Resource Include="$(ApplicationIcon)" Link="Assets\WavePlayer.ico" />
     <Page Include="..\theme-preview\ThemeWindow.xaml" Link="ThemeWindow.xaml" />
     <Compile Include="..\theme-preview\ThemeWindow.xaml.cs" Link="ThemeWindow.xaml.cs" />

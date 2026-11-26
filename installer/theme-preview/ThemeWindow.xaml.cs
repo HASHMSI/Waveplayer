@@ -11,18 +11,37 @@ public partial class ThemeWindow : Window
 {
     private bool _modern;
     private int _hoverRevision;
+    private bool _closing;
+    private bool _allowClose;
+    private bool? _result;
     public string SelectedStyle => _modern ? "Modern80s" : "NeonDrive";
 
     public ThemeWindow(bool modern = false)
     {
         _modern = modern;
         InitializeComponent();
+        Icon = BrandIcon.Source = Asset("WavePlayer.ico");
+        RetroScreenshot.Background = new ImageBrush(Asset("Classic80s.jpg")) { Stretch = Stretch.UniformToFill };
+        ModernScreenshot.Background = new ImageBrush(Asset("Modern80s.jpg")) { Stretch = Stretch.UniformToFill };
+        // A layered, borderless window avoids the white native resize frame.
+        // Border.CornerRadius alone does not clip its children in WPF.
+        AtmosphereSurface.SizeChanged += (_, _) => AtmosphereSurface.Clip =
+            new RectangleGeometry(new Rect(0, 0, AtmosphereSurface.ActualWidth, AtmosphereSurface.ActualHeight), 17, 17);
+        foreach (var card in new[] { RetroCard, ModernCard })
+            if (card.Child is FrameworkElement surface)
+                surface.SizeChanged += (_, _) => surface.Clip = new RectangleGeometry(
+                    new Rect(0, 0, surface.ActualWidth, surface.ActualHeight), 14, 14);
+        Closing += (_, e) => { if (!_allowClose) { e.Cancel = true; Finish(null); } };
         Loaded += (_, _) =>
         {
             BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(460)));
             UpdateSelection();
         };
     }
+
+    // Shared by setup and player; resolve images against the owning assembly.
+    private static BitmapImage Asset(string name) => new(new Uri(
+        $"pack://application:,,,/{typeof(ThemeWindow).Assembly.GetName().Name};component/Assets/{name}"));
 
     private static void Animate(System.Windows.Media.Animation.Animatable target, DependencyProperty property, double value, int ms = 230)
     {
@@ -91,8 +110,7 @@ public partial class ThemeWindow : Window
         PreviewPanel.Margin = retro ? new Thickness(40, 0, 0, 0) : new Thickness(0, 0, 40, 0);
         if (PreviewPanel.Effect is System.Windows.Media.Effects.DropShadowEffect glow)
             glow.Color = (Color)ColorConverter.ConvertFromString(retro ? "#F363D3" : "#69DCEB")!;
-        PreviewScreenshot.Background = new ImageBrush(new BitmapImage(new Uri(
-            retro ? "pack://application:,,,/Assets/Classic80s.jpg" : "pack://application:,,,/Assets/Modern80s.jpg")))
+        PreviewScreenshot.Background = new ImageBrush(Asset(retro ? "Classic80s.jpg" : "Modern80s.jpg"))
         { Stretch = Stretch.UniformToFill };
         HoverPreview.Visibility = Visibility.Visible;
         HoverPreview.BeginAnimation(OpacityProperty, null);
@@ -133,8 +151,8 @@ public partial class ThemeWindow : Window
     private void Select(bool modern) { _modern = modern; UpdateSelection(); }
     private void UpdateSelection()
     {
-        RetroCheck.Text = _modern ? "○" : "●";
-        ModernCheck.Text = _modern ? "●" : "○";
+        RetroCheck.Text = _modern ? "○" : "✓";
+        ModernCheck.Text = _modern ? "✓" : "○";
         SelectionText.Text = _modern ? "02 / 02   ·   Modern 80s selected" : "01 / 02   ·   80s selected";
         RetroCard.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(_modern ? "#865A82" : "#FF73C7")!);
         ModernCard.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(_modern ? "#75D7E6" : "#65748E")!);
@@ -145,7 +163,23 @@ public partial class ThemeWindow : Window
         if (e.OriginalSource is Button) return;
         try { DragMove(); } catch (InvalidOperationException) { }
     }
-    private void Close_Click(object sender, RoutedEventArgs e) => Close();
-    private void Back_Click(object sender, RoutedEventArgs e) => DialogResult = false;
-    private void Continue_Click(object sender, RoutedEventArgs e) => DialogResult = true;
+    private void Close_Click(object sender, RoutedEventArgs e) => Finish(null);
+    private void Back_Click(object sender, RoutedEventArgs e) => Finish(false);
+    private void Continue_Click(object sender, RoutedEventArgs e) => Finish(true);
+    private void Finish(bool? result)
+    {
+        if (_closing) return;
+        _closing = true;
+        _result = result;
+        IsHitTestVisible = false;
+        var fade = new DoubleAnimation(0, TimeSpan.FromMilliseconds(180))
+        { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn } };
+        fade.Completed += (_, _) =>
+        {
+            _allowClose = true;
+            if (_result is bool choice) DialogResult = choice;
+            else Close();
+        };
+        BeginAnimation(OpacityProperty, fade);
+    }
 }
