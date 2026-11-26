@@ -24,7 +24,7 @@ New-Item -ItemType Directory -Path (Split-Path -Parent $zip) -Force | Out-Null
 [IO.Compression.ZipFile]::CreateFromDirectory($payload, $zip, [IO.Compression.CompressionLevel]::Optimal, $false)
 New-Item -ItemType Directory -Path $output -Force | Out-Null
 & $Dotnet publish $setupProject -c Release -r win-x64 --self-contained true `
-    -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
+    -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
     -p:PublishTrimmed=false -o $output
 if ($LASTEXITCODE -ne 0) { throw 'Setup publish failed.' }
 Write-Host "Setup created at $output/WavePlayerSetup.exe"

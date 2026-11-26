@@ -17,7 +17,7 @@ internal static class Program
     private static readonly List<Process> Children = [];
     private static readonly BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
     private static string Baseline = "", Package = "";
-    private static readonly Version Version = new("1.1.2");
+    private static Version Version = new("1.1.2");
     private static string SettingsFile => Path.Combine(Root, "prefs", "settings.json");
 
     private static void Check(bool result, string label)
@@ -68,6 +68,7 @@ internal static class Program
         if (args.Length != 2) throw new ArgumentException("Expected baseline ZIP and current ZIP.");
         Baseline = Path.GetFullPath(args[0]);
         Package = Path.GetFullPath(args[1]);
+        Version = System.Version.Parse(UpdatePackage.ReadArchive(Package).Version);
         Directory.CreateDirectory(Path.Combine(Root, "prefs"));
         Directory.CreateDirectory(Path.Combine(Root, "music"));
         Environment.SetEnvironmentVariable("WAVEPLAYER_LAB_DATA_DIR", Path.Combine(Root, "prefs"));
@@ -120,12 +121,12 @@ internal static class Program
                 // downloader, SHA-256 checks, file transaction and player restart.
                 var target = OldInstall("auto-update");
                 File.WriteAllText(Path.Combine(target, "personal.txt"), "keep");
-                var asset = new UpdateAsset(new Uri("https://github.com/HASHMSI/Waveplayer/releases/download/v1.1.2/WavePlayerFiles.zip"),
+                var asset = new UpdateAsset(new Uri($"https://github.com/HASHMSI/Waveplayer/releases/download/v{Version}/WavePlayerFiles.zip"),
                     new FileInfo(Package).Length, Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(Package))));
                 var handler = new PackageHandler(Package);
                 var window = new UpdaterWindow(Path.Combine(target, "WavePlayer.exe"), -1, resumeHidden: true)
                 {
-                    ReleaseProvider = () => Task.FromResult<ReleasePackage?>(new(Version, "v1.1.2", asset, null)),
+                    ReleaseProvider = () => Task.FromResult<ReleasePackage?>(new(Version, $"v{Version}", asset, null)),
                     DownloadHandler = handler
                 };
                 var completion = new TaskCompletionSource();
@@ -135,7 +136,7 @@ internal static class Program
                 await completion.Task.WaitAsync(TimeSpan.FromSeconds(60));
                 Check(handler.Count == 1 && UpdatePackage.ReadInstalled(target)!.Version == Version.ToString(),
                     "automatic HTTP download, verification and install completed");
-                Check(FileVersionInfo.GetVersionInfo(Path.Combine(target, "WavePlayer.exe")).FileVersion!.StartsWith("1.1.2") &&
+                Check(FileVersionInfo.GetVersionInfo(Path.Combine(target, "WavePlayer.exe")).FileVersion!.StartsWith(Version.ToString()) &&
                     File.ReadAllText(Path.Combine(target, "personal.txt")) == "keep", "updated executable version matches and personal files survive");
                 var updated = Process.GetProcessesByName("WavePlayer").FirstOrDefault(process =>
                 {

@@ -138,8 +138,25 @@ public partial class UpdaterWindow : Window
 
     private async Task DownloadPackageAsync(UpdateAsset asset, string destination)
     {
+        try { await DownloadManagedAsync(asset, destination); }
+        catch (Exception ex) when (DownloadHandler is null && WindowsPackageDownload.Available &&
+            (ex is HttpRequestException or TaskCanceledException))
+        {
+            SetStage("Downloading the update", "Retrying with the Windows network transport", 3);
+            await WindowsPackageDownload.DownloadAsync(asset, destination, (total, size) =>
+            {
+                SetProgress(3 + Math.Clamp(total * 78d / size, 0, 78));
+                StatusText.Text = $"{total / 1048576d:0.0} / {size / 1048576d:0.0} MB";
+            });
+        }
+    }
+
+    private async Task DownloadManagedAsync(UpdateAsset asset, string destination)
+    {
         SetStage("Downloading the update", "Secure package from GitHub Releases", 3);
-        using var client = DownloadHandler is null ? new HttpClient() : new HttpClient(DownloadHandler, disposeHandler: false);
+        using var client = DownloadHandler is null
+            ? new HttpClient(new SocketsHttpHandler { ConnectTimeout = TimeSpan.FromSeconds(20) })
+            : new HttpClient(DownloadHandler, disposeHandler: false);
         client.Timeout = TimeSpan.FromMinutes(30);
         client.DefaultRequestHeaders.UserAgent.ParseAdd("WavePlayer-Updater/1.0");
         using var response = await client.GetAsync(asset.DownloadUrl, HttpCompletionOption.ResponseHeadersRead);

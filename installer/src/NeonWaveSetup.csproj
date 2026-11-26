@@ -6,10 +6,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>WavePlayerSetup</AssemblyName>
-    <Version>1.1.2</Version>
-    <InformationalVersion>1.1.2</InformationalVersion>
+    <Version>1.1.3</Version>
+    <InformationalVersion>1.1.3</InformationalVersion>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
-    <FileVersion>1.1.2</FileVersion>
+    <FileVersion>1.1.3</FileVersion>
     <ApplicationIcon>..\..\src\SynthwaveNowPlaying\Assets\WavePlayer.ico</ApplicationIcon>
     <DefineConstants>$(DefineConstants);SETUP</DefineConstants>
   </PropertyGroup>
